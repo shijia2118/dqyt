@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="@dimen/dp_350"
+    android:layout_height="wrap_content"
+    android:elevation="3dp"
+    android:background="@drawable/shape_input_password"
+    android:paddingHorizontal="@dimen/dp_20"
+    android:paddingVertical="@dimen/dp_20"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        android:textSize="@dimen/sp_16"
+        android:text="设置" />
+
+    <EditText
+        android:id="@+id/et_input"
+        android:layout_width="match_parent"
+        android:layout_marginTop="@dimen/dp_20"
+        android:layout_height="@dimen/dp_30"
+        android:paddingStart="@dimen/dp_10"
+        android:layout_marginBottom="@dimen/dp_20"
+        android:background="@drawable/shape_input_rectangle"
+        android:textSize="@dimen/sp_12"
+        android:hint="请输入"
+        android:textCursorDrawable="@drawable/custom_cursor"
+        android:focusable="true"
+        android:focusableInTouchMode="true"/>
+
+
+    <TextView
+        android:id="@+id/btn_confirm"
+        android:layout_width="@dimen/dp_150"
+        android:layout_height="@dimen/dp_30"
+        android:gravity="center"
+        android:layout_gravity="center_horizontal"
+        android:background="@drawable/shape_btn_bg"
+        android:textSize="@dimen/sp_12"
+        android:textColor="@color/white"
+        android:text="确认"/>
+
+</LinearLayout>

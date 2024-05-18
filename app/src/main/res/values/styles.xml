@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="LoadingDialogStyle" parent="@android:style/Theme.Dialog">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+
+    <style name="CustomDialog"  parent="android:Theme.Dialog">
+        <!--提示框是否有边框-->
+        <item name="android:windowFrame">@null</item>
+        <!-- 背景颜色及透明程度 -->
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <!-- 是否半透明 -->
+        <item name="android:windowIsTranslucent">false</item>
+        <!-- 是否没有标题 -->
+        <item name="android:windowNoTitle">true</item>
+        <!-- 是否浮现在activity之上 -->
+        <item name="android:windowIsFloating">true</item>
+        <!-- 是否背景遮罩透明度 -->
+        <item name="android:backgroundDimEnabled">true</item>
+        <!-- 设置遮罩透明度-->
+        <item name="android:backgroundDimAmount">0.3</item>
+        <!--<item name="windowFullscreen">true</item>-->
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+
+    <!--diaog底部弹出 退出-->
+    <style name="dialogAnim" mce_bogus="1" parent="android:Animation">
+        <item name="android:windowEnterAnimation">@anim/dialog_push_in</item>
+        <item name="android:windowExitAnimation">@anim/dialog_push_out</item>
+    </style>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimary</item>
+        <item name="colorAccent">@color/colorPrimary</item>
+    </style>
+
+    <declare-styleable name="SystemSetWidget">
+        <attr name="titleText" format="string"/>
+        <attr name="customComponent" format="reference"/>
+    </declare-styleable>
+
+    <style name="Spinner_config">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">@drawable/icon_spinner</item>
+        <item name="android:gravity">right|center_vertical</item>
+        <item name="android:textSize">@dimen/dp_12</item>
+        <item name="android:paddingLeft">@dimen/dp_5</item>
+
+    </style>
+
+    <array name="Spinner_connect_type">
+        <item>变频器</item><!--0-->
+        <item>断路器</item><!--1-->
+        <item>温湿度传感器</item><!--2-->
+        <item>噪声传感器</item><!--3-->
+        <item>烟雾传感器</item><!--3-->
+        <item>齿轮转速传感器</item><!--3-->
+        <item>震动监测传感器</item><!--3-->
+        <item>水浸变送器</item><!--3-->
+        <item>液面测试仪</item><!--3-->
+    </array>
+
+    <array name="Spinner_channel">
+        <item>通道1</item><!--0-->
+        <item>通道2</item><!--0-->
+        <item>通道3</item><!--0-->
+        <item>通道4</item><!--0-->
+
+    </array>
+
+
+</resources>

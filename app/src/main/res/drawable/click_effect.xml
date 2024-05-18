@@ -1,0 +1,30 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Pressed state -->
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/button" />
+            <corners
+                android:topLeftRadius="0dp"
+                android:topRightRadius="@dimen/dp_10"
+                android:bottomLeftRadius="0dp"
+                android:bottomRightRadius="@dimen/dp_10"/>
+        </shape>
+    </item>
+
+    <!-- Default state -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+            <stroke
+                android:width="@dimen/dp_1"
+                android:color="#808080" />
+            <corners
+                android:topLeftRadius="0dp"
+                android:topRightRadius="@dimen/dp_10"
+                android:bottomLeftRadius="0dp"
+                android:bottomRightRadius="@dimen/dp_10"/>
+        </shape>
+    </item>
+
+</selector>

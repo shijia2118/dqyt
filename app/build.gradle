@@ -1,0 +1,57 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.hxjt.dqyt'
+    compileSdk 32
+
+    defaultConfig {
+        applicationId "com.hxjt.dqyt"
+        minSdk 21
+        targetSdk 32
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.4.1'
+    implementation 'com.google.android.material:material:1.5.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    implementation 'androidx.multidex:multidex:2.0.0'
+    implementation 'com.google.code.gson:gson:2.8.2'
+    implementation 'com.jakewharton:butterknife:10.2.0'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:10.2.0'
+    implementation 'io.reactivex.rxjava2:rxjava:2.1.12'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.0.2'
+    implementation 'com.tbruyelle.rxpermissions2:rxpermissions:0.9.5@aar'
+    implementation 'com.trello.rxlifecycle2:rxlifecycle-components:2.2.1'
+    implementation 'com.squareup.okio:okio:1.14.0'
+    implementation 'com.squareup.okhttp3:okhttp:3.10.0'
+    implementation 'com.squareup.retrofit2:converter-scalars:2.3.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.10.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.4.0'
+    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.4.0'
+    implementation 'com.mirkowu:StatusBarUtil:0.0.6'
+    implementation 'com.kyleduo.switchbutton:library:2.1.0'
+    implementation 'com.lxj:xpopup:2.0.8-rc5'
+
+
+}

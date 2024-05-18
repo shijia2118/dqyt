@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="@dimen/dp_350"
+    android:layout_height="wrap_content"
+    android:elevation="@dimen/dp_3"
+    android:background="@drawable/shape_white_bg"
+    android:paddingVertical="@dimen/dp_10"
+    android:gravity="center_horizontal"
+    android:paddingHorizontal="@dimen/dp_20"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_30"
+        android:gravity="center"
+        android:textSize="@dimen/sp_14"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        android:layout_marginBottom="@dimen/dp_10"
+        android:text="修改设备名称" />
+
+    <EditText
+        android:id="@+id/et_device_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="8dp"
+        android:layout_marginBottom="@dimen/dp_10"
+        android:textSize="@dimen/sp_14"
+        android:hint="请输入新的名称" />
+
+    <Button
+        android:id="@+id/btn_confirm"
+        android:layout_marginTop="@dimen/dp_8"
+        android:background="@drawable/shape_btn_bg"
+        android:layout_width="@dimen/dp_100"
+        android:textSize="@dimen/sp_12"
+        android:text="确定"
+        android:textColor="@color/white"
+        android:layout_height="@dimen/dp_30"/>
+
+
+</LinearLayout>
