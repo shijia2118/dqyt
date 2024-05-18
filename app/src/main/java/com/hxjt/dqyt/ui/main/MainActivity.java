@@ -142,7 +142,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
         TcpClient.getInstance().setDataReceivedListener(dataReceivedListener);
 
         displayWithTcpStatus(TcpClient.getInstance().isConnected());
-
+        mMyAdapter.updateStatus();
         mMyAdapter.updateDlqImg();
     }
 
@@ -165,20 +165,12 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
      */
     private final View.OnClickListener onCloseApp = v -> {};
 
-    private final View.OnClickListener onReConnection = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    if(!TcpClient.getInstance().isConnected()){
-                        TcpClient.getInstance().connectToServer();
-                        TcpClient.getInstance().startMessageReceiver();
-                    }
-                }
-            }).start();
+    private final View.OnClickListener onReConnection = v -> new Thread(() -> {
+        if(!TcpClient.getInstance().isConnected()){
+            TcpClient.getInstance().connectToServer();
+            TcpClient.getInstance().startMessageReceiver();
         }
-    };
+    }).start();
 
     private void  displayWithTcpStatus(boolean isConnected) {
         if(isConnected){
@@ -186,6 +178,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
         } else {
             tcpStatusImg.setImageResource(R.drawable.icon_disconnect);
         }
+        mMyAdapter.updateStatus();
     }
 
     private void sendMessage(String deviceCode){

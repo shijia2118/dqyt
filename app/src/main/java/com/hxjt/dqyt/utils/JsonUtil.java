@@ -1,9 +1,11 @@
 package com.hxjt.dqyt.utils;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -154,10 +156,26 @@ public class JsonUtil {
         // 创建一个Gson对象
         Gson gson = new Gson();
 
-        // 使用Gson将JSON字符串转换为Map对象
-        Type type = new TypeToken<Map<String, Object>>(){}.getType();
-        Map<String, Object> map = gson.fromJson(jsonString, type);
-
-        return map;
+        try {
+            // 使用Gson将JSON字符串转换为Map对象
+            Type type = new TypeToken<Map<String, Object>>(){}.getType();
+            Map<String, Object> map = gson.fromJson(jsonString, type);
+            return map;
+        } catch (JsonSyntaxException e) {
+            // JSON语法错误
+            e.printStackTrace();
+            // 返回一个空的Map或null，视情况而定
+            return new HashMap<>();
+        } catch (OutOfMemoryError e) {
+            // 内存不足错误
+            e.printStackTrace();
+            // 返回一个空的Map或null，视情况而定
+            return new HashMap<>();
+        } catch (Exception e) {
+            // 捕获其他可能的异常
+            e.printStackTrace();
+            // 返回一个空的Map或null，视情况而定
+            return new HashMap<>();
+        }
     }
 }

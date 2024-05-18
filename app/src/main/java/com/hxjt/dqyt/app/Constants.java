@@ -14,13 +14,12 @@ import java.util.List;
  */
 
 public class Constants {
-    public static final String TCP_AUTO_CONNECTION = "tcp_auto_connection"; //tcp是否自动连接
     public static final String IP_ADDRESS = "ip_address"; //ip地址
     public static final String PORT = "port"; //端口号
 
     public static final String PASSWORD_FHZ = "password_fhz"; //分合闸密码
 
-    public static final String DEFAULT_IP_ADDRESS = "192.168.5.100"; //TCP默认IP
+    public static final String DEFAULT_IP_ADDRESS = "192.168.1.100"; //TCP默认IP
     public static final String DEFAULT_PORT = "6789"; //TCP默认端口号
     public static final String CONFIG_MENU_CODES = "config_menu_codes"; //已配置的菜单
     public static final String DLQ_TYPE = "dlq_type";

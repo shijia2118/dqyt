@@ -143,8 +143,14 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
     }
 
     private void sendMessage_sk(){
-        sendMessage("1");
-        new Handler(Looper.getMainLooper()).postDelayed(() -> sendMessage("11"), 500);
+        String type = SPUtil.getString(Constants.DLQ_TYPE,"sk");
+        if(type.equals("sk")){
+            sendMessage("1");
+            new Handler(Looper.getMainLooper()).postDelayed(() -> sendMessage("11"), 500);
+        } else if(type.equals("lc")){
+            sendMessage("11");
+            new Handler(Looper.getMainLooper()).postDelayed(() -> sendMessage("1"), 4000);
+        }
     }
 
     private void sendMessage_bpq(){
@@ -170,7 +176,6 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
             sendMessage("1");
         }
     }
-
 
     /**
      * 操作按钮视图
@@ -393,7 +398,10 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
 
                         mReceivedTcpData = map;
                         statusAdapter.update(DeviceDetailActivity.this,stateLabels,mReceivedTcpData);
-//                        initStateView();
+
+                        if(deviceType.equals(Constants.SK645)){
+                            sendMessage("11");
+                        }
                     }
                 }
             }

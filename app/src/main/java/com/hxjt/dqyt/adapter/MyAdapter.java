@@ -189,6 +189,10 @@ public class MyAdapter extends BaseAdapter {
         notifyDataSetChanged();
     }
 
+    public void updateStatus(){
+        notifyDataSetChanged();
+    }
+
 //    private void updateConnectionStatus(boolean isConnected){
 //        this.isConnected = isConnected;
 //        notifyDataSetChanged();
