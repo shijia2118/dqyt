@@ -110,8 +110,6 @@ public class TcpClient {
                 });
             }
         } catch (IOException e) {
-             isConnected = false;
-            notifyConnectionStatusChanged(false);
             Log.e("TcpClient", "接收消息: " + e.getMessage());
         }
     }

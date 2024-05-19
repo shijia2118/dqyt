@@ -24,6 +24,7 @@ import com.hxjt.dqyt.adapter.TextButtonAdapter;
 import com.hxjt.dqyt.app.Constants;
 import com.hxjt.dqyt.base.BaseActivity;
 import com.hxjt.dqyt.bean.DeviceInfoBean;
+import com.hxjt.dqyt.ui.widget.MyCustomGridView;
 import com.hxjt.dqyt.utils.DeviceUtil;
 import com.hxjt.dqyt.utils.JsonUtil;
 import com.hxjt.dqyt.utils.SPUtil;
@@ -50,7 +51,7 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
     private TextView tvDeviceType;
     private GridView operationGridView;
     private String[] operationButtonLabels;
-    private GridView stateGridView;
+    private MyCustomGridView stateGridView;
     private Map<String,Object>[] stateLabels;
     private Map<String,Object> mReceivedTcpData;
     private TextButtonAdapter textButtonAdapter;
@@ -148,7 +149,7 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
             sendMessage("1");
             new Handler(Looper.getMainLooper()).postDelayed(() -> sendMessage("11"), 500);
         } else if(type.equals("lc")){
-            sendMessage("11");
+            sendMessage("1");
             new Handler(Looper.getMainLooper()).postDelayed(() -> sendMessage("1"), 4000);
         }
     }
@@ -391,7 +392,6 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
                             ToastUtil.s(msg);
                         }
 
-                        orderToFalse();
                         if (handler != null) {
                             handler.removeCallbacksAndMessages(null);
                         }
@@ -399,9 +399,11 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
                         mReceivedTcpData = map;
                         statusAdapter.update(DeviceDetailActivity.this,stateLabels,mReceivedTcpData);
 
-                        if(deviceType.equals(Constants.SK645)){
+                        if(deviceType.equals(Constants.SK645) && (isFz || isHz) ){
+                            orderToFalse();
                             sendMessage("11");
                         }
+                        orderToFalse();
                     }
                 }
             }
@@ -502,7 +504,7 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
             hideLoading();
             orderToFalse();
             ToastUtil.s("操作超时");
-        }, 10000);
+        }, 5000);
     }
 
     /**

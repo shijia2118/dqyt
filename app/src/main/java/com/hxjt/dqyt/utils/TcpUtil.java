@@ -1,5 +1,7 @@
 package com.hxjt.dqyt.utils;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -19,9 +21,9 @@ public class TcpUtil {
 
         Gson gson = new Gson();
         String jsonString = gson.toJson(map);
-        new Thread(() -> {
-            TcpClient.getInstance().sendMessage(jsonString);
-        }).start();
+        TcpClient.getInstance().sendMessage(jsonString);
+
+
     }
 
     public void deleteDevice(DeviceInfoBean deviceInfoBean){

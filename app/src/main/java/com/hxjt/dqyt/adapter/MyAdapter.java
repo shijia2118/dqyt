@@ -2,6 +2,8 @@ package com.hxjt.dqyt.adapter;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +23,8 @@ import com.hxjt.dqyt.utils.SPUtil;
 import com.hxjt.dqyt.utils.TcpClient;
 
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MyAdapter extends BaseAdapter {
     private  List<DeviceInfoBean> mData;
@@ -85,22 +89,10 @@ public class MyAdapter extends BaseAdapter {
             viewHolder.imageView.setImageResource(drawable);
         }
 
-        if(mTimeValue != null && deviceInfoBean != null) {
-            String t0 = mData.get(position).getDev_type();
-            String t1 = deviceInfoBean.getDev_type();
 
-            String c0 = mData.get(position).getAddr();
-            String c1 = deviceInfoBean.getAddr();
-
-            if(t0!=null&&t1!=null&&c0!=null&&c1!=null){
-                if(t0.equals(t1) && c0.equals(c1)){
-                    viewHolder.tvTimeValue.setText(mTimeValue);
-                }
-            }
-        }
 
         if(device.getDev_type()!=null&&device.getDev_type().equals(Constants.JCQ)){
-            viewHolder.tvTimeValue.setText("有信号");
+            viewHolder.tvTimeValue.setText("运行");
         }
 
         //塑壳图片
@@ -119,38 +111,118 @@ public class MyAdapter extends BaseAdapter {
             mContext.startActivity(intent);
         });
 
-        View.OnAttachStateChangeListener listener = new View.OnAttachStateChangeListener() {
-            @Override
-            public void onViewAttachedToWindow(View v) {
-                boolean isConnected = TcpClient.getInstance().isConnected();
-                if (isConnected) {
-                    viewHolder.ivDeviceStatus.setImageResource(R.drawable.online_device);
-                    /**
-                     * 闪烁动画
-                     * 开始闪烁
-                     * setDuration 设置闪烁一次的时间
-                     * setRepeatCount 设置闪烁次数 可以是具体数值，也可以是Animation.INFINITE（重复多次）
-                     * setRepeatMode 动画结束后从头开始或从末尾开始
-                     * Animation.REVERSE（从末尾开始） Animation.RESTART（从头开始）
-                     * setAnimation将设置的动画添加到view上
-                     */
-                    alphaAnimation = new AlphaAnimation(0.1f, 1.0f);
-                    alphaAnimation.setDuration(1000);
-                    alphaAnimation.setRepeatCount(Animation.INFINITE);
-                    alphaAnimation.setRepeatMode(Animation.RESTART);
-                    viewHolder.ivDeviceStatus.setAnimation(alphaAnimation);
-                    alphaAnimation.start();
-                } else {
-                    viewHolder.ivDeviceStatus.setImageResource(R.drawable.offline_device);
+        if(mTimeValue != null && deviceInfoBean != null) {
+            String t0 = mData.get(position).getDev_type();
+            String t1 = deviceInfoBean.getDev_type();
+
+            String c0 = mData.get(position).getAddr();
+            String c1 = deviceInfoBean.getAddr();
+
+            if(t0!=null&&t1!=null&&c0!=null&&c1!=null){
+                if(t0.equals(t1) && c0.equals(c1)){
+                    viewHolder.tvTimeValue.setText(mTimeValue);
+
+                    if (viewHolder.tvTimeValue.getTag() != null) {
+                        viewHolder.tvTimeValue.removeOnAttachStateChangeListener((View.OnAttachStateChangeListener) viewHolder.tvTimeValue.getTag()); //移除旧的监听器
+                    }
+                    viewHolder.ivDeviceStatus.setVisibility(View.VISIBLE);
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                        viewHolder.ivDeviceStatus.setVisibility(View.INVISIBLE);
+                        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                            viewHolder.ivDeviceStatus.setVisibility(View.VISIBLE);
+                            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                viewHolder.ivDeviceStatus.setVisibility(View.INVISIBLE);
+                                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                    viewHolder.ivDeviceStatus.setVisibility(View.VISIBLE);
+                                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                        viewHolder.ivDeviceStatus.setVisibility(View.INVISIBLE);
+                                    },700);
+                                },700);
+                            },700);
+                        },700);
+                    },700);
+
+
+
+
+
+
+
+//                    View.OnAttachStateChangeListener listener = new View.OnAttachStateChangeListener() {
+//                        @Override
+//                        public void onViewAttachedToWindow(View v) {
+//                            /**
+//                             * 闪烁动画
+//                             * 开始闪烁
+//                             * setDuration 设置闪烁一次的时间
+//                             * setRepeatCount 设置闪烁次数 可以是具体数值，也可以是Animation.INFINITE（重复多次）
+//                             * setRepeatMode 动画结束后从头开始或从末尾开始
+//                             * Animation.REVERSE（从末尾开始） Animation.RESTART（从头开始）
+//                             * setAnimation将设置的动画添加到view上
+//                             */
+//                            alphaAnimation = new AlphaAnimation(0.1f, 1.0f);
+//                            alphaAnimation.setDuration(500);
+//                            alphaAnimation.setRepeatCount(Animation.INFINITE);
+//                            alphaAnimation.setRepeatMode(Animation.RESTART);
+//                            viewHolder.ivDeviceStatus.setAnimation(alphaAnimation);
+//                            alphaAnimation.start();
+//                        }
+//
+//                        @Override
+//                        public void onViewDetachedFromWindow(View v) {
+//                        }
+//                    };
+//                    viewHolder.ivDeviceStatus.addOnAttachStateChangeListener(listener);
+//                    viewHolder.ivDeviceStatus.setTag(listener);
+
+//                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+//                        if (viewHolder.ivDeviceStatus.getTag() != null) {
+//                            viewHolder.ivDeviceStatus.removeOnAttachStateChangeListener((View.OnAttachStateChangeListener) viewHolder.ivDeviceStatus.getTag()); //移除旧的监听器
+//                        }
+//                        viewHolder.ivDeviceStatus.setVisibility(View.INVISIBLE);
+//                    },2000);
                 }
             }
+        }
 
-            @Override
-            public void onViewDetachedFromWindow(View v) {
-            }
-        };
-        viewHolder.ivDeviceStatus.addOnAttachStateChangeListener(listener);
-        viewHolder.ivDeviceStatus.setTag(listener);
+//        viewHolder.ivDeviceStatus.setVisibility(View.VISIBLE);
+//        View.OnAttachStateChangeListener listener = new View.OnAttachStateChangeListener() {
+//            @Override
+//            public void onViewAttachedToWindow(View v) {
+//                /**
+//                 * 闪烁动画
+//                 * 开始闪烁
+//                 * setDuration 设置闪烁一次的时间
+//                 * setRepeatCount 设置闪烁次数 可以是具体数值，也可以是Animation.INFINITE（重复多次）
+//                 * setRepeatMode 动画结束后从头开始或从末尾开始
+//                 * Animation.REVERSE（从末尾开始） Animation.RESTART（从头开始）
+//                 * setAnimation将设置的动画添加到view上
+//                 */
+//                alphaAnimation = new AlphaAnimation(0.1f, 1.0f);
+//                alphaAnimation.setDuration(1000);
+//                alphaAnimation.setRepeatCount(Animation.INFINITE);
+//                alphaAnimation.setRepeatMode(Animation.RESTART);
+//                viewHolder.ivDeviceStatus.setAnimation(alphaAnimation);
+//                alphaAnimation.start();
+//            }
+//
+//            @Override
+//            public void onViewDetachedFromWindow(View v) {
+//            }
+//        };
+//        viewHolder.ivDeviceStatus.addOnAttachStateChangeListener(listener);
+//        viewHolder.ivDeviceStatus.setTag(listener);
+//
+//        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+//                        if (viewHolder.ivDeviceStatus.getTag() != null) {
+//                            viewHolder.ivDeviceStatus.removeOnAttachStateChangeListener((View.OnAttachStateChangeListener) viewHolder.ivDeviceStatus.getTag()); //移除旧的监听器
+//                        }
+//                        viewHolder.ivDeviceStatus.setVisibility(View.INVISIBLE);
+//                    },2000);
+
+
+
+
 
         return convertView;
     }

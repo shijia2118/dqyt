@@ -24,6 +24,8 @@ import com.hxjt.dqyt.utils.JsonUtil;
 import com.hxjt.dqyt.utils.TcpClient;
 import com.hxjt.dqyt.utils.TcpUtil;
 
+import org.w3c.dom.Text;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,6 +49,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
     private String mTimeValue;
     private MyAdapter mMyAdapter;
     private LinearLayout ll_connect;
+    private TextView tv_reload;
 
     private GridView gridView;
     private List<DeviceInfoBean> mDevices = new ArrayList<>();
@@ -83,6 +86,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
         tvCloseApp = findViewById(R.id.tv_close_app);
         ll_right = findViewById(R.id.ll_right);
         ll_connect = findViewById(R.id.ll_connect);
+        tv_reload = findViewById(R.id.tv_reload);
 
         llBack.setVisibility(View.GONE);
         tvTitle.setVisibility(View.VISIBLE);
@@ -106,6 +110,21 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
         llSystemSet.setOnClickListener(onSystemSetListener);
         tvCloseApp.setOnClickListener(onCloseApp);
         ll_connect.setOnClickListener(onReConnection);
+        tv_reload.setOnClickListener(onReload);
+
+        showLoading("正在加载");
+        TcpClient.getInstance().connectToServer();
+        TcpClient.getInstance().startMessageReceiver();
+
+//        new Handler(Looper.getMainLooper()).postDelayed(()->{
+//
+//        },3000);
+
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            TcpUtil tcpUtil = new TcpUtil();
+            tcpUtil.getAllDevices();
+            hideLoading();
+        },10000);
 
         TcpClient.getInstance().setDataReceivedListener(dataReceivedListener);
 
@@ -136,10 +155,10 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
     protected void onResume() {
         super.onResume();
 
+        TcpClient.getInstance().setDataReceivedListener(dataReceivedListener);
+
         TcpUtil tcpUtil = new TcpUtil();
         tcpUtil.getAllDevices();
-
-        TcpClient.getInstance().setDataReceivedListener(dataReceivedListener);
 
         displayWithTcpStatus(TcpClient.getInstance().isConnected());
         mMyAdapter.updateStatus();
@@ -171,6 +190,21 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
             TcpClient.getInstance().startMessageReceiver();
         }
     }).start();
+
+    private final View.OnClickListener onReload = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            showLoading("正在加载...");
+            new Thread(() -> {
+                TcpClient.getInstance().connectToServer();
+                TcpClient.getInstance().startMessageReceiver();
+
+                TcpUtil tcpUtil = new TcpUtil();
+                tcpUtil.getAllDevices();
+            }).start();
+            hideLoading();
+        }
+    };
 
     private void  displayWithTcpStatus(boolean isConnected) {
         if(isConnected){
@@ -318,7 +352,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
                             } else if(deviceType.equals(Constants.WSD_CGQ)) {
                                 StringBuilder stringBuilder = new StringBuilder();
                                 String wd = (String) map.get("Wd");
-                                if(wd != null){
+                                if(wd != null) {
                                     stringBuilder.append(wd);
                                 }
                                 String sd = (String) map.get("Sd");
@@ -331,7 +365,12 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
                             } else if(deviceType.equals(Constants.DLQ)){
                                 mTimeValue = (String) map.get("");
                             } else if(deviceType.equals(Constants.JCQ)){
-                                mTimeValue = "有信号";
+                                String jcq = "运行";
+                                String result = (String) map.get("Data");
+                                if(result!=null&&result.equals("0")){
+                                    jcq = "断开";
+                                }
+                                mTimeValue = jcq;
                             }
                             mMyAdapter.updateTimeValue(infoBean,mTimeValue);
                         }

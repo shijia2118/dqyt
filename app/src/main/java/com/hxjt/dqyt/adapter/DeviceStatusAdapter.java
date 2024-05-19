@@ -192,10 +192,10 @@ public class DeviceStatusAdapter extends BaseAdapter {
                         } else  if(TextUtil.isEqualIgnoreCase(entry.getKey(),"Data")){
                             //接触器运行状态
                             if(value.equals("0")){
-                                value = "无信号";
+                                value = "断开";
                                 viewHolder.imageView.setImageResource(R.drawable.icon_xhckgl);
                             } else if(value.equals("1")){
-                                value = "有信号";
+                                value = "运行";
                                 viewHolder.imageView.setImageResource(R.drawable.icon_xhckgl);
                             }
                         }

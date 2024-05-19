@@ -57,10 +57,9 @@ public class App extends BaseApplication {
             public void onActivityResumed(Activity activity) {
                 boolean isTcpConnected = TcpClient.getInstance().isConnected();
                 if(!isTcpConnected){
-                    new Thread(() -> {
-                        TcpClient.getInstance().connectToServer();
-                        TcpClient.getInstance().startMessageReceiver();
-                    }).start();
+                    TcpClient.getInstance().connectToServer();
+                    TcpClient.getInstance().startMessageReceiver();
+
                 }
             }
 

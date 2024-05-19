@@ -42,6 +42,7 @@
                     android:layout_width="@dimen/dp_15"
                     android:layout_height="@dimen/dp_15"
                     android:layout_gravity="center_vertical"
+                    android:visibility="invisible"
                     android:src="@drawable/online_device" />
             </LinearLayout>
 
