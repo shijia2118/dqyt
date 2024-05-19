@@ -130,21 +130,15 @@ public class TcpClient {
                 socket.setKeepAlive(true);
                 reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        isConnected = true;
-                        notifyConnectionStatusChanged(true);
-                    }
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    isConnected = true;
+                    notifyConnectionStatusChanged(true);
                 });
             } catch (Exception e) {
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        isConnected = false;
-                        notifyConnectionStatusChanged(false);
-                        ToastUtil.s("TCP连接失败");
-                    }
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    isConnected = false;
+                    notifyConnectionStatusChanged(false);
+                    ToastUtil.s("TCP连接失败");
                 });
             }
         });

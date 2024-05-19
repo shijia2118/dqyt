@@ -89,11 +89,9 @@ public class MyAdapter extends BaseAdapter {
             viewHolder.imageView.setImageResource(drawable);
         }
 
-
-
-        if(device.getDev_type()!=null&&device.getDev_type().equals(Constants.JCQ)){
-            viewHolder.tvTimeValue.setText("运行");
-        }
+//        if(device.getDev_type()!=null&&device.getDev_type().equals(Constants.JCQ)){
+//            viewHolder.tvTimeValue.setText("运行");
+//        }
 
         //塑壳图片
         if(device.getDev_type()!=null &&device.getDev_type().equals(Constants.SK645)){

@@ -9,7 +9,6 @@ import android.os.Looper;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.GridView;
@@ -30,10 +29,12 @@ import com.hxjt.dqyt.utils.JsonUtil;
 import com.hxjt.dqyt.utils.SPUtil;
 import com.hxjt.dqyt.utils.TcpClient;
 import com.hxjt.dqyt.utils.TcpUtil;
+import com.hxjt.dqyt.utils.TextUtil;
 import com.hxjt.dqyt.utils.ToastUtil;
 import com.lxj.xpopup.XPopup;
-import com.lxj.xpopup.interfaces.OnInputConfirmListener;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -139,7 +140,10 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
 
         TcpClient.getInstance().setDataReceivedListener(dataReceivedListener);
 
-        sendMessage_all();
+//        sendMessage_all();
+
+        showLoading("正在加载...");
+        new Handler(Looper.getMainLooper()).postDelayed(this::hideLoading,3000);
 
     }
 
@@ -260,6 +264,11 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
 
             stateLabels = DeviceUtil.getDeviceStatusByType(deviceType);
 
+            if(deviceType.equals(Constants.SK645) && SPUtil.getString(Constants.DLQ_TYPE,"sk").equals("lc")){
+                //量测去掉"闸位状态"
+                stateLabels = DeviceUtil.removeFirstElement(stateLabels);
+            }
+
             if(statusAdapter == null){
                 statusAdapter = new DeviceStatusAdapter(this, stateLabels,mReceivedTcpData);
                 stateGridView.setAdapter(statusAdapter);
@@ -270,21 +279,6 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
             int verticalSpacing = getResources().getDimensionPixelSize(R.dimen.dp_5);
             stateGridView.setHorizontalSpacing(horizontalSpacing);
             stateGridView.setVerticalSpacing(verticalSpacing);
-        }
-    }
-
-    private void updateFhzView(){
-        if(mReceivedTcpData != null && deviceInfoBean != null){
-            if(deviceInfoBean.getDev_type().equals(Constants.DLQ) || deviceInfoBean.getDev_type().equals(Constants.SK645)){
-                String fhz = (String) mReceivedTcpData.get("Kaiguan");
-                if(fhz != null && fhz.equals("1")){
-                    operationButtonLabels = new String[]{"修改名称","删除","遥测","分闸"};
-                } else {
-                    operationButtonLabels = new String[]{"修改名称","删除","遥测","合闸"};
-                }
-                textButtonAdapter = new TextButtonAdapter(this, operationButtonLabels);
-                operationGridView.setAdapter(textButtonAdapter);
-            }
         }
     }
 
@@ -332,8 +326,6 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
                     tcpUtil.deleteDevice(deviceInfoBean);
                 }).show();
     }
-
-
 
     /**
      * 接收开发板发送的消息
@@ -397,6 +389,21 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
                         }
 
                         mReceivedTcpData = map;
+
+                        if(deviceType.equals(Constants.SK645) && SPUtil.getString(Constants.DLQ_TYPE,"sk").equals("lc")){
+                            for (Map.Entry<String, Object> entry : mReceivedTcpData.entrySet()) {
+                                String key = entry.getKey();
+                                boolean needParse = TextUtil.isEqualIgnoreCase(key,"DqAxiangDianLiu") || TextUtil.isEqualIgnoreCase(key,"DqBxiangDianLiu")||
+                                        TextUtil.isEqualIgnoreCase(key,"DqCxiangDianLiu") ||  TextUtil.isEqualIgnoreCase(key,"DqCxiangDianLiu");
+                                if (needParse) {
+                                    String str = (String) entry.getValue();
+                                    BigDecimal value = new BigDecimal(str);
+                                    BigDecimal result = value.divide(new BigDecimal(10), 2, RoundingMode.HALF_UP);
+                                    map.put(key, result.toString());
+                                }
+                            }
+                        }
+
                         statusAdapter.update(DeviceDetailActivity.this,stateLabels,mReceivedTcpData);
 
                         if(deviceType.equals(Constants.SK645) && (isFz || isHz) ){

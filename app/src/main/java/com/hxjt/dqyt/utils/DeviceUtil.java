@@ -983,4 +983,25 @@ public class DeviceUtil {
             default:return new HashMap[0];
         }
     }
+
+    /**
+     * 移除Map中首个元素
+     * @param originalArray
+     * @return
+     */
+    public static Map<String, Object>[] removeFirstElement(Map<String, Object>[] originalArray) {
+        if (originalArray == null || originalArray.length == 0) {
+            return originalArray; // 如果原数组为空，直接返回原数组
+        }
+
+        // 创建一个新的数组，其长度比原数组少一个
+        Map<String, Object>[] newArray = new Map[originalArray.length - 1];
+
+        // 将原数组中的元素（从第二个元素开始）复制到新数组
+        System.arraycopy(originalArray, 1, newArray, 0, originalArray.length - 1);
+
+        return newArray;
+    }
+
+
 }

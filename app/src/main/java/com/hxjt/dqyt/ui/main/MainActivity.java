@@ -23,9 +23,12 @@ import com.hxjt.dqyt.ui.system.SystemSetActivity;
 import com.hxjt.dqyt.utils.JsonUtil;
 import com.hxjt.dqyt.utils.TcpClient;
 import com.hxjt.dqyt.utils.TcpUtil;
+import com.hxjt.dqyt.utils.ToastUtil;
 
 import org.w3c.dom.Text;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -112,13 +115,9 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
         ll_connect.setOnClickListener(onReConnection);
         tv_reload.setOnClickListener(onReload);
 
-        showLoading("正在加载");
+        showLoading("正在加载...");
         TcpClient.getInstance().connectToServer();
         TcpClient.getInstance().startMessageReceiver();
-
-//        new Handler(Looper.getMainLooper()).postDelayed(()->{
-//
-//        },3000);
 
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             TcpUtil tcpUtil = new TcpUtil();
@@ -137,7 +136,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
 //        emptyView.setVisibility(View.GONE);
 //        DeviceInfoBean deviceInfoBean = DeviceInfoBean.fromMap(map);
 //        mDevices.add(deviceInfoBean);
-//
+////
 //        map.put("chl",1);
 //        map.put("dev_type","sk645");
 //        map.put("addr","123");
@@ -301,7 +300,14 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
                             } else if(deviceType.equals(Constants.ZS_CGQ)){
                                 mTimeValue = (String) map.get("ZSvalue");
                             } else if(deviceType.equals(Constants.YW_CGQ)) {
-                                mTimeValue = (String) map.get("BJQstatus");
+                                String s = (String)map.get("BJQstatus");
+                                if(s!=null){
+                                    if(s.equals("0")){
+                                        mTimeValue = "正常";
+                                    } else {
+                                        mTimeValue = "报警";
+                                    }
+                                }
                             } else if(deviceType.equals(Constants.YM_CSY)){
                                 mTimeValue = (String) map.get("Ddymsd");
                             } else if(deviceType.equals(Constants.SJ_BSQ)){
@@ -365,10 +371,10 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
                             } else if(deviceType.equals(Constants.DLQ)){
                                 mTimeValue = (String) map.get("");
                             } else if(deviceType.equals(Constants.JCQ)){
-                                String jcq = "运行";
-                                String result = (String) map.get("Data");
+                                String jcq = "断开";
+                                String result = (String) map.get("data");
                                 if(result!=null&&result.equals("0")){
-                                    jcq = "断开";
+                                    jcq = "运行";
                                 }
                                 mTimeValue = jcq;
                             }

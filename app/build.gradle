@@ -2,6 +2,10 @@ plugins {
     id 'com.android.application'
 }
 
+def releaseTime() {
+    return new Date().format("yyyyMMdd HH_mm_ss", TimeZone.getDefault())
+}
+
 android {
     namespace 'com.hxjt.dqyt'
     compileSdk 32
@@ -10,10 +14,19 @@ android {
         applicationId "com.hxjt.dqyt"
         minSdk 21
         targetSdk 32
-        versionCode 2
-        versionName "1.0.1"
+        versionCode 6
+        versionName "1.0.6"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    android.applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def outputFile = output.outputFile
+            if (outputFile.name.contains("release")) {
+                outputFileName = "智慧油田-v${variant.versionName}-${releaseTime()}-${variant.buildType.name}.apk"
+            }
+        }
     }
 
     buildTypes {
