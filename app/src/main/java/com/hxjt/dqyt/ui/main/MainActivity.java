@@ -260,16 +260,45 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
                             mDevices.addAll(deviceInfoListBean.getAddrList_sk645());
                         }
 
-                        mDevices.addAll(deviceInfoListBean.getAddrList_Bpq());
-                        mDevices.addAll(deviceInfoListBean.getAddrList_dlq());
-                        mDevices.addAll(deviceInfoListBean.getAddrList_Ymcsy());
-                        mDevices.addAll(deviceInfoListBean.getAddrList_sjcgq());
-                        mDevices.addAll(deviceInfoListBean.getAddrList_wsdcgq());
-                        mDevices.addAll(deviceInfoListBean.getAddrList_clzscgq());
-                        mDevices.addAll(deviceInfoListBean.getAddrList_ywcgq());
-                        mDevices.addAll(deviceInfoListBean.getAddrList_zdjccgq());
-                        mDevices.addAll(deviceInfoListBean.getAddrList_zscgq());
-                        mDevices.addAll(deviceInfoListBean.getAddrList_jcq());
+                        if(deviceInfoListBean.getAddrList_Bpq() !=null){
+                            mDevices.addAll(deviceInfoListBean.getAddrList_Bpq());
+                        }
+
+                        if(deviceInfoListBean.getAddrList_dlq() != null){
+                            mDevices.addAll(deviceInfoListBean.getAddrList_dlq());
+                        }
+
+                        if(deviceInfoListBean.getAddrList_Ymcsy() != null){
+                            mDevices.addAll(deviceInfoListBean.getAddrList_Ymcsy());
+                        }
+
+                        if(deviceInfoListBean.getAddrList_sjcgq() != null){
+                            mDevices.addAll(deviceInfoListBean.getAddrList_sjcgq());
+                        }
+
+                        if(deviceInfoListBean.getAddrList_wsdcgq() != null){
+                            mDevices.addAll(deviceInfoListBean.getAddrList_wsdcgq());
+                        }
+
+                        if(deviceInfoListBean.getAddrList_clzscgq() != null){
+                            mDevices.addAll(deviceInfoListBean.getAddrList_clzscgq());
+                        }
+
+                        if(deviceInfoListBean.getAddrList_ywcgq() != null){
+                            mDevices.addAll(deviceInfoListBean.getAddrList_ywcgq());
+                        }
+
+                        if(deviceInfoListBean.getAddrList_zdjccgq() != null){
+                            mDevices.addAll(deviceInfoListBean.getAddrList_zdjccgq());
+                        }
+
+                        if(deviceInfoListBean.getAddrList_zscgq() != null){
+                            mDevices.addAll(deviceInfoListBean.getAddrList_zscgq());
+                        }
+
+                        if(deviceInfoListBean.getAddrList_jcq() != null){
+                            mDevices.addAll(deviceInfoListBean.getAddrList_jcq());
+                        }
 
                         if(mDevices.isEmpty()){
                             emptyView.setVisibility(View.VISIBLE);
