@@ -5,7 +5,4 @@ import com.hxjt.dqyt.bean.DeviceInfoListBean;
 
 public interface MainView extends BaseView {
 
-    void getAllDeviceSuccess(DeviceInfoListBean deviceInfoListBean);
-    void getAllDeviceFailed(String message);
-
 }

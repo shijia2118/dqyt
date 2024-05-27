@@ -1,6 +1,9 @@
 package com.hxjt.dqyt.ui.system;
 
 
+import static com.hxjt.dqyt.app.Constants.IP_ADDRESS;
+import static com.hxjt.dqyt.app.Constants.PORT;
+
 import android.app.Dialog;
 import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
@@ -20,6 +23,10 @@ import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.easysocket.EasySocket;
+import com.easysocket.entity.OriginReadData;
+import com.easysocket.entity.SocketAddress;
+import com.easysocket.interfaces.conn.ISocketActionListener;
 import com.hxjt.dqyt.R;
 import com.hxjt.dqyt.app.Constants;
 import com.hxjt.dqyt.base.BaseActivity;
@@ -28,7 +35,6 @@ import com.hxjt.dqyt.bean.MenuButtonBean;
 import com.hxjt.dqyt.utils.DeviceUtil;
 import com.hxjt.dqyt.utils.JsonUtil;
 import com.hxjt.dqyt.utils.SPUtil;
-import com.hxjt.dqyt.utils.TcpClient;
 import com.hxjt.dqyt.utils.TcpUtil;
 import com.hxjt.dqyt.utils.ToastUtil;
 
@@ -37,7 +43,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implements SystemSetView {
+public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implements SystemSetView, ISocketActionListener {
 
     private LinearLayout llBack;
     private LinearLayout llIpSet;
@@ -69,15 +75,7 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
     }
 
     @Override
-    public void onConnectionStatusChanged(boolean isConnected) {
-        displayWithTcpStatus(isConnected);
-        hideLoading();
-    }
-
-
-    @Override
-    public void initData() {
-    }
+    public void initData() {}
 
     @Override
     public void initView() {
@@ -115,14 +113,12 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
             rb_lc.setChecked(true);
         }
 
-        String ip = SPUtil.getString(Constants.IP_ADDRESS, "");
+        String ip = SPUtil.getString(IP_ADDRESS, "");
         tvIpSet.setText(ip);
-        String port = SPUtil.getString(Constants.PORT, "");
-        tvPortSet.setText(port);
+        int port = (int) SPUtil.get(PORT, -1);
+        tvPortSet.setText(String.valueOf(port));
 
-        TcpClient.getInstance().setDataReceivedListener(dataReceivedListener);
-
-        displayWithTcpStatus(TcpClient.getInstance().isConnected());
+        EasySocket.getInstance().subscribeSocketAction(this);
 
     }
 
@@ -131,18 +127,18 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
     View.OnClickListener portSetListener = v -> showInputDialog(1);
 
     View.OnClickListener tcpSwitchListener = v -> {
-        boolean isTcpConnected = TcpClient.getInstance().isConnected();
-        if(isTcpConnected){
-            showLoading("正在关闭...");
-            TcpClient.getInstance().close();
-        } else {
-            showLoading("正在开启...");
-            new Thread(() -> {
-                TcpClient.getInstance().connectToServer();
-                TcpClient.getInstance().startMessageReceiver();
-            }).start();
-
-        }
+//        boolean isTcpConnected = TcpClient.getInstance().isConnected();
+//        if(isTcpConnected){
+//            showLoading("正在关闭...");
+//            TcpClient.getInstance().close();
+//        } else {
+//            showLoading("正在开启...");
+//            new Thread(() -> {
+//                TcpClient.getInstance().connectToServer();
+//                TcpClient.getInstance().startMessageReceiver();
+//            }).start();
+//
+//        }
     };
 
     RadioGroup.OnCheckedChangeListener onCheckedChangeListener = (group, checkedId) -> {
@@ -216,8 +212,8 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
         inputDialog.getWindow().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.transparent)));
         EditText input = inputDialog.findViewById(R.id.et_input);
 
-        String ip = SPUtil.getString(Constants.IP_ADDRESS, "");
-        String port = SPUtil.getString(Constants.PORT, "");
+        String ip = SPUtil.getString(IP_ADDRESS, "");
+        String port = SPUtil.getString(PORT, "");
 
         if(type == 0){
             input.setText(ip);
@@ -230,10 +226,10 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
                 ToastUtil.s("请输入"+ (type == 0 ? "IP地址" : "端口号"));
             } else {
                 if(type == 0){
-                    SPUtil.putString(Constants.IP_ADDRESS,input.getText().toString());
+                    SPUtil.putString(IP_ADDRESS,input.getText().toString());
                     tvIpSet.setText(input.getText().toString());
                 } else {
-                    SPUtil.putString(Constants.PORT,input.getText().toString());
+                    SPUtil.putString(PORT,input.getText().toString());
                     tvPortSet.setText(input.getText().toString());
                 }
                 Log.d("msg",input.getText().toString());
@@ -311,7 +307,7 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
             } else if(!oldPwd.equals(etOldPwd.getText().toString())){
                 ToastUtil.s("旧密码错误");
             } else {
-                SPUtil.putString(Constants.IP_ADDRESS,etNewPwd.getText().toString());
+                SPUtil.putString(IP_ADDRESS,etNewPwd.getText().toString());
                 ToastUtil.s("修改成功");
                 inputDialog.dismiss();
             }
@@ -433,22 +429,34 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
         inputDialog.show();
     }
 
-    private void  displayWithTcpStatus(boolean isConnected) {
-        if(isConnected){
-            tcpStatusImg.setImageResource(R.drawable.icon_connect);
-            tvTcpSwitch.setText("关闭");
-            tvTcpTitle.setText("关闭TCP");
-        } else {
-            tcpStatusImg.setImageResource(R.drawable.icon_disconnect);
-            tvTcpSwitch.setText("开启");
-            tvTcpTitle.setText("开启TCP");
-        }
+    @Override
+    public void onSocketConnSuccess(SocketAddress socketAddress) {
+        tcpStatusImg.setImageResource(R.drawable.icon_connect);
+        tvTcpSwitch.setText("关闭");
+        tvTcpTitle.setText("关闭TCP");
     }
 
-    /**
-     * 接收开发板发送的消息
-     */
-    TcpClient.DataReceivedListener dataReceivedListener = data -> {
+    @Override
+    public void onSocketConnFail(SocketAddress socketAddress, boolean isNeedReconnect) {
+        tcpStatusImg.setImageResource(R.drawable.icon_disconnect);
+        tvTcpSwitch.setText("开启");
+        tvTcpTitle.setText("开启TCP");
+    }
+
+    @Override
+    public void onSocketDisconnect(SocketAddress socketAddress, boolean isNeedReconnect) {
+        tcpStatusImg.setImageResource(R.drawable.icon_disconnect);
+        tvTcpSwitch.setText("开启");
+        tvTcpTitle.setText("开启TCP");
+    }
+
+    @Override
+    public void onSocketResponse(SocketAddress socketAddress, OriginReadData originReadData) {
+
+    }
+
+    @Override
+    public void onSocketResponse(SocketAddress socketAddress, String data) {
         Map<String,Object> map = JsonUtil.toMap(data);
         String cmdType = (String) map.get("TcpCmdType");
 
@@ -466,21 +474,10 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
                 }
             }
         }
-    };
-
-
-    @Override
-    public void addDeviceSuccess(String message) {
-        inputDialog.dismiss();
-        hideLoading();
-        ToastUtil.s(message);
-
     }
 
     @Override
-    public void addDeviceFailed(String message) {
-        hideLoading();
-        ToastUtil.s(message);
+    public void onSocketResponse(SocketAddress socketAddress, byte[] readData) {
 
     }
 }

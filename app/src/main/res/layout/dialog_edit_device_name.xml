@@ -23,10 +23,14 @@
     <EditText
         android:id="@+id/et_device_name"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/dp_30"
         android:paddingHorizontal="8dp"
         android:layout_marginBottom="@dimen/dp_10"
         android:textSize="@dimen/sp_14"
+        android:background="@drawable/shape_input_rectangle"
+        android:textCursorDrawable="@drawable/custom_cursor"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
         android:hint="请输入新的名称" />
 
     <Button

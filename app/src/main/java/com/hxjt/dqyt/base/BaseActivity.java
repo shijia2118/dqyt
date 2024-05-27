@@ -14,7 +14,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.hxjt.dqyt.dialog.LoadingDialog;
 import com.hxjt.dqyt.utils.ActivityManager;
-import com.hxjt.dqyt.utils.TcpClient;
 import com.hxjt.dqyt.utils.ToastUtil;
 
 
@@ -108,19 +107,8 @@ public abstract class BaseActivity<P extends BasePresenter> extends AppCompatAct
         initData();
         ActivityManager.getInstance().add(this);
 
-        /// 开启Tcp连接状态的监听
-        TcpClient.getInstance().setConnectionListener(tcpConnectionListener);
-
     }
 
-    /**
-     * TCP连接状态监听
-     */
-    TcpClient.ConnectionListener tcpConnectionListener = isConnected -> {
-        this.runOnUiThread(() -> onConnectionStatusChanged(isConnected));
-    };
-
-    public abstract void onConnectionStatusChanged(boolean isConnected);
 
     public abstract void initData();
 

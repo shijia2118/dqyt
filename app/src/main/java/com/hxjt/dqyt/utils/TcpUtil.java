@@ -1,12 +1,10 @@
 package com.hxjt.dqyt.utils;
 
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
-
+import com.easysocket.EasySocket;
 import com.google.gson.Gson;
 import com.hxjt.dqyt.bean.DeviceInfoBean;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,9 +19,10 @@ public class TcpUtil {
 
         Gson gson = new Gson();
         String jsonString = gson.toJson(map);
-        TcpClient.getInstance().sendMessage(jsonString);
 
+        byte[] jsonBytes = jsonString.getBytes(StandardCharsets.UTF_8);
 
+        EasySocket.getInstance().upMessage(jsonBytes);
     }
 
     public void deleteDevice(DeviceInfoBean deviceInfoBean){
@@ -35,9 +34,9 @@ public class TcpUtil {
 
         Gson gson = new Gson();
         String jsonString = gson.toJson(map);
-        new Thread(() -> {
-            TcpClient.getInstance().sendMessage(jsonString);
-        }).start();
+
+        byte[] jsonBytes = jsonString.getBytes(StandardCharsets.UTF_8);
+        EasySocket.getInstance().upMessage(jsonBytes);
     }
 
     public void editDevice(DeviceInfoBean deviceInfoBean){
@@ -49,9 +48,9 @@ public class TcpUtil {
 
         Gson gson = new Gson();
         String jsonString = gson.toJson(map);
-        new Thread(() -> {
-            TcpClient.getInstance().sendMessage(jsonString);
-        }).start();
+
+        byte[] jsonBytes = jsonString.getBytes(StandardCharsets.UTF_8);
+        EasySocket.getInstance().upMessage(jsonBytes);
     }
 
     public void addDevice(DeviceInfoBean deviceInfoBean){
@@ -63,9 +62,8 @@ public class TcpUtil {
 
         Gson gson = new Gson();
         String jsonString = gson.toJson(map);
-        TcpClient.getInstance().sendMessage(jsonString);
-
-
+        byte[] jsonBytes = jsonString.getBytes(StandardCharsets.UTF_8);
+        EasySocket.getInstance().upMessage(jsonBytes);
     }
 
 }

@@ -16,6 +16,10 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.easysocket.EasySocket;
+import com.easysocket.entity.OriginReadData;
+import com.easysocket.entity.SocketAddress;
+import com.easysocket.interfaces.conn.ISocketActionListener;
 import com.google.gson.Gson;
 import com.hxjt.dqyt.R;
 import com.hxjt.dqyt.adapter.DeviceStatusAdapter;
@@ -27,7 +31,6 @@ import com.hxjt.dqyt.ui.widget.MyCustomGridView;
 import com.hxjt.dqyt.utils.DeviceUtil;
 import com.hxjt.dqyt.utils.JsonUtil;
 import com.hxjt.dqyt.utils.SPUtil;
-import com.hxjt.dqyt.utils.TcpClient;
 import com.hxjt.dqyt.utils.TcpUtil;
 import com.hxjt.dqyt.utils.TextUtil;
 import com.hxjt.dqyt.utils.ToastUtil;
@@ -35,10 +38,11 @@ import com.lxj.xpopup.XPopup;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> implements  DeviceDetailView {
+public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> implements  DeviceDetailView, ISocketActionListener {
 
     private String deviceNo;
     private DeviceInfoBean deviceInfoBean;
@@ -79,11 +83,6 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
     @Override
     protected int getLayoutId() {
         return R.layout.activity_device_detail;
-    }
-
-    @Override
-    public void onConnectionStatusChanged(boolean isConnected) {
-        displayWithTcpStatus(isConnected);
     }
 
     @Override
@@ -132,18 +131,14 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
             tvDeviceType.setText(typeName);
         }
 
+        EasySocket.getInstance().subscribeSocketAction(this);
+
         initOperationView();
 
         initStateView();
 
-        displayWithTcpStatus(TcpClient.getInstance().isConnected());
+        sendMessage_all();
 
-        TcpClient.getInstance().setDataReceivedListener(dataReceivedListener);
-
-//        sendMessage_all();
-
-        showLoading("正在加载...");
-        new Handler(Looper.getMainLooper()).postDelayed(this::hideLoading,3000);
 
     }
 
@@ -327,96 +322,6 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
                 }).show();
     }
 
-    /**
-     * 接收开发板发送的消息
-     */
-    TcpClient.DataReceivedListener dataReceivedListener = new TcpClient.DataReceivedListener() {
-        @Override
-        public void onDataReceived(String data) {
-            Map<String,Object> map = JsonUtil.toMap(data);
-            String cmdType = (String) map.get("TcpCmdType");
-            String message = (String) map.get("Message");
-            Boolean success = (Boolean) map.get("Success");
-
-            if(cmdType == null) return;
-
-            if(cmdType.equals("101")){
-                hideLoading();
-                if(success != null && success){
-                    //删除成功
-                    finish();
-                } else {
-                    //删除失败
-                    if(message != null){
-                        ToastUtil.s(message);
-                    }
-                }
-            } else if(cmdType.equals("102")){
-                //修改设备名称
-                hideLoading();
-                if(success != null && success){
-                    if(tempDeviceName != null){
-                        deviceInfoBean.setName(tempDeviceName);
-                        tvDeviceName.setText(tempDeviceName);
-                    }
-                } else {
-                    //编辑失败
-                    if(message != null){
-                        ToastUtil.s(message);
-                    }
-                }
-            } else {
-                //Tcp数据包
-                String deviceType = deviceInfoBean.getDev_type();
-                if (deviceType!=null) {
-                    String deviceCode = (String) map.get("DeviceCode");
-
-                    if(deviceType.equals(Constants.DLQ)){
-                        deviceCode = (String) map.get("SN");
-                    }
-                    //收到的tcp数据包属于当前设备
-                    //设备类型，设备编号均一致，可以锁定是当前设备
-                    if(cmdType.equals(deviceType) && deviceCode != null && deviceCode.equals(deviceInfoBean.getAddr())){
-                        hideLoading();
-
-                        String msg = getMsgByOperationType();
-                        if(msg != null){
-                            ToastUtil.s(msg);
-                        }
-
-                        if (handler != null) {
-                            handler.removeCallbacksAndMessages(null);
-                        }
-
-                        mReceivedTcpData = map;
-
-                        if(deviceType.equals(Constants.SK645) && SPUtil.getString(Constants.DLQ_TYPE,"sk").equals("lc")){
-                            for (Map.Entry<String, Object> entry : mReceivedTcpData.entrySet()) {
-                                String key = entry.getKey();
-                                boolean needParse = TextUtil.isEqualIgnoreCase(key,"DqAxiangDianLiu") || TextUtil.isEqualIgnoreCase(key,"DqBxiangDianLiu")||
-                                        TextUtil.isEqualIgnoreCase(key,"DqCxiangDianLiu") ||  TextUtil.isEqualIgnoreCase(key,"DqCxiangDianLiu");
-                                if (needParse) {
-                                    String str = (String) entry.getValue();
-                                    BigDecimal value = new BigDecimal(str);
-                                    BigDecimal result = value.divide(new BigDecimal(10), 2, RoundingMode.HALF_UP);
-                                    map.put(key, result.toString());
-                                }
-                            }
-                        }
-
-                        statusAdapter.update(DeviceDetailActivity.this,stateLabels,mReceivedTcpData);
-
-                        if(deviceType.equals(Constants.SK645) && (isFz || isHz) ){
-                            orderToFalse();
-                            sendMessage("11");
-                        }
-                        orderToFalse();
-                    }
-                }
-            }
-        }
-    };
-
     private String getMsgByOperationType(){
         if(isFzyx) return "正在反向运行";
         if(isZzyx) return "正在正向运行";
@@ -439,12 +344,12 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
 
     private void sendMessage(String cmdType){
 
-        if(!TcpClient.getInstance().isConnected()){
-            ToastUtil.s("TCP未连接");
-            orderToFalse();
-            hideLoading();
-            return;
-        }
+//        if(!TcpClient.getInstance().isConnected()){
+//            ToastUtil.s("TCP未连接");
+//            orderToFalse();
+//            hideLoading();
+//            return;
+//        }
 
         if(handler != null){
             handler.removeCallbacksAndMessages(null);
@@ -461,19 +366,22 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
             after10sHandle();
             Gson gson = new Gson();
             String jsonString = gson.toJson(map);
-            TcpClient.getInstance().sendMessage(jsonString);
+
+            byte[] jsonBytes = jsonString.getBytes(StandardCharsets.UTF_8);
+
+            EasySocket.getInstance().upMessage(jsonBytes);
         }
     }
 
 
     private void sendMessage(String cmdType,String payloadJson){
 
-        if(!TcpClient.getInstance().isConnected()){
-            ToastUtil.s("TCP未连接");
-            orderToFalse();
-            hideLoading();
-            return;
-        }
+//        if(!TcpClient.getInstance().isConnected()){
+//            ToastUtil.s("TCP未连接");
+//            orderToFalse();
+//            hideLoading();
+//            return;
+//        }
 
         if(handler != null){
             handler.removeCallbacksAndMessages(null);
@@ -490,7 +398,10 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
             after10sHandle();
             Gson gson = new Gson();
             String jsonString = gson.toJson(map);
-            TcpClient.getInstance().sendMessage(jsonString);
+
+            byte[] jsonBytes = jsonString.getBytes(StandardCharsets.UTF_8);
+
+            EasySocket.getInstance().upMessage(jsonBytes);
         }
     }
 
@@ -520,12 +431,12 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
      */
     private void sendMessage_Bpq(String payloadJson){
 
-        if(!TcpClient.getInstance().isConnected()){
-            ToastUtil.s("TCP未连接");
-            orderToFalse();
-            hideLoading();
-            return;
-        }
+//        if(!TcpClient.getInstance().isConnected()){
+//            ToastUtil.s("TCP未连接");
+//            orderToFalse();
+//            hideLoading();
+//            return;
+//        }
 
         if(deviceInfoBean != null){
             Map<String,Object> map = new HashMap<>();
@@ -538,7 +449,9 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
             Gson gson = new Gson();
             String jsonString = gson.toJson(map);
 
-            TcpClient.getInstance().sendMessage(jsonString);
+            byte[] jsonBytes = jsonString.getBytes(StandardCharsets.UTF_8);
+
+            EasySocket.getInstance().upMessage(jsonBytes);
         }
     }
 
@@ -694,4 +607,114 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
         ToastUtil.s(errorMsg);
     }
 
+    @Override
+    public void onSocketConnSuccess(SocketAddress socketAddress) {
+
+    }
+
+    @Override
+    public void onSocketConnFail(SocketAddress socketAddress, boolean isNeedReconnect) {
+
+    }
+
+    @Override
+    public void onSocketDisconnect(SocketAddress socketAddress, boolean isNeedReconnect) {
+
+    }
+
+    @Override
+    public void onSocketResponse(SocketAddress socketAddress, OriginReadData originReadData) {
+
+    }
+
+    @Override
+    public void onSocketResponse(SocketAddress socketAddress, String readData) {
+        Map<String,Object> map = JsonUtil.toMap(readData);
+        String cmdType = (String) map.get("TcpCmdType");
+        String message = (String) map.get("Message");
+        Boolean success = (Boolean) map.get("Success");
+
+        if(cmdType == null) return;
+
+        if(cmdType.equals("101")){
+            hideLoading();
+            if(success != null && success){
+                //删除成功
+                finish();
+            } else {
+                //删除失败
+                if(message != null){
+                    ToastUtil.s(message);
+                }
+            }
+        } else if(cmdType.equals("102")){
+            //修改设备名称
+            hideLoading();
+            if(success != null && success){
+                if(tempDeviceName != null){
+                    deviceInfoBean.setName(tempDeviceName);
+                    tvDeviceName.setText(tempDeviceName);
+                }
+            } else {
+                //编辑失败
+                if(message != null){
+                    ToastUtil.s(message);
+                }
+            }
+        } else {
+            //Tcp数据包
+            String deviceType = deviceInfoBean.getDev_type();
+            if (deviceType!=null) {
+                String deviceCode = (String) map.get("DeviceCode");
+
+                if(deviceType.equals(Constants.DLQ)){
+                    deviceCode = (String) map.get("SN");
+                }
+                //收到的tcp数据包属于当前设备
+                //设备类型，设备编号均一致，可以锁定是当前设备
+                if(cmdType.equals(deviceType) && deviceCode != null && deviceCode.equals(deviceInfoBean.getAddr())){
+                    hideLoading();
+
+                    String msg = getMsgByOperationType();
+                    if(msg != null){
+                        ToastUtil.s(msg);
+                    }
+
+                    if (handler != null) {
+                        handler.removeCallbacksAndMessages(null);
+                    }
+
+                    mReceivedTcpData = map;
+
+                    if(deviceType.equals(Constants.SK645) && SPUtil.getString(Constants.DLQ_TYPE,"sk").equals("lc")){
+                        for (Map.Entry<String, Object> entry : mReceivedTcpData.entrySet()) {
+                            String key = entry.getKey();
+                            boolean needParse = TextUtil.isEqualIgnoreCase(key,"DqAxiangDianLiu") || TextUtil.isEqualIgnoreCase(key,"DqBxiangDianLiu")||
+                                    TextUtil.isEqualIgnoreCase(key,"DqCxiangDianLiu") ||  TextUtil.isEqualIgnoreCase(key,"DqCxiangDianLiu");
+                            if (needParse) {
+                                String str = (String) entry.getValue();
+                                BigDecimal value = new BigDecimal(str);
+                                BigDecimal result = value.divide(new BigDecimal(10), 2, RoundingMode.HALF_UP);
+                                map.put(key, result.toString());
+                            }
+                        }
+                    }
+
+                    statusAdapter.update(DeviceDetailActivity.this,stateLabels,mReceivedTcpData);
+
+                    if(deviceType.equals(Constants.SK645) && (isFz || isHz) ){
+                        orderToFalse();
+                        sendMessage("11");
+                    }
+                    orderToFalse();
+                }
+            }
+        }
+
+    }
+
+    @Override
+    public void onSocketResponse(SocketAddress socketAddress, byte[] readData) {
+
+    }
 }

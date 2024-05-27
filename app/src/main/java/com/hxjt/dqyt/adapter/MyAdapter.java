@@ -8,7 +8,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -20,11 +19,8 @@ import com.hxjt.dqyt.bean.DeviceInfoBean;
 import com.hxjt.dqyt.ui.detail.DeviceDetailActivity;
 import com.hxjt.dqyt.utils.DeviceUtil;
 import com.hxjt.dqyt.utils.SPUtil;
-import com.hxjt.dqyt.utils.TcpClient;
 
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class MyAdapter extends BaseAdapter {
     private  List<DeviceInfoBean> mData;
@@ -88,10 +84,6 @@ public class MyAdapter extends BaseAdapter {
         if(drawable != -1){
             viewHolder.imageView.setImageResource(drawable);
         }
-
-//        if(device.getDev_type()!=null&&device.getDev_type().equals(Constants.JCQ)){
-//            viewHolder.tvTimeValue.setText("运行");
-//        }
 
         //塑壳图片
         if(device.getDev_type()!=null &&device.getDev_type().equals(Constants.SK645)){
@@ -263,16 +255,5 @@ public class MyAdapter extends BaseAdapter {
         notifyDataSetChanged();
     }
 
-//    private void updateConnectionStatus(boolean isConnected){
-//        this.isConnected = isConnected;
-//        notifyDataSetChanged();
-//    }
-
-    private void updateStatusView(){
-        boolean isConnectd = TcpClient.getInstance().isConnected();
-        if(isConnectd){
-
-        }
-    }
 }
 
