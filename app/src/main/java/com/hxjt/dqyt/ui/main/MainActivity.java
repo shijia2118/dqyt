@@ -1,7 +1,11 @@
 package com.hxjt.dqyt.ui.main;
 
+import static com.hxjt.dqyt.app.Constants.CONNECTION_CHANGED;
+import static com.hxjt.dqyt.app.Constants.RECEIVED_MESSAGE;
+
 import android.content.Intent;
 import android.graphics.Typeface;
+import android.os.Handler;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
@@ -11,11 +15,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.easysocket.EasySocket;
-import com.easysocket.entity.OriginReadData;
-import com.easysocket.entity.SocketAddress;
 import com.easysocket.interfaces.conn.IConnectionManager;
-import com.easysocket.interfaces.conn.ISocketActionListener;
-import com.easysocket.utils.LogUtil;
 import com.hxjt.dqyt.R;
 import com.hxjt.dqyt.adapter.MyAdapter;
 import com.hxjt.dqyt.app.Constants;
@@ -25,6 +25,7 @@ import com.hxjt.dqyt.bean.DeviceInfoListBean;
 import com.hxjt.dqyt.ui.system.SystemSetActivity;
 import com.hxjt.dqyt.utils.JsonUtil;
 import com.hxjt.dqyt.utils.TcpUtil;
+import com.hxjt.dqyt.utils.ToastUtil;
 
 import org.simple.eventbus.EventBus;
 import org.simple.eventbus.Subscriber;
@@ -33,28 +34,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class MainActivity extends BaseActivity<MainPresenter> implements MainView ,ISocketActionListener{
+public class MainActivity extends BaseActivity<MainPresenter> implements MainView{
 
     private ImageView tcpStatusImg;
-    private TextView tvTitle;
-    private TextView tvDeviceNo;
-    private LinearLayout llBack;
-
     private String deviceNo; //网关编号
 
-    private DeviceInfoListBean deviceInfoListBean;
-
     LinearLayout emptyView ;
-    private LinearLayout llSystemSet;
-    private TextView tvCloseApp;
-    private LinearLayout ll_right;
     private String mTimeValue;
     private MyAdapter mMyAdapter;
-    private LinearLayout ll_connect;
-    private TextView tv_reload;
+    private Handler handler;
 
     private GridView gridView;
-    private List<DeviceInfoBean> mDevices = new ArrayList<>();
+    private final List<DeviceInfoBean> mDevices = new ArrayList<>();
 
     @Override
     protected MainPresenter createPresenter() {
@@ -72,16 +63,15 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
     @Override
     public void initView() {
         tcpStatusImg = findViewById(R.id.tv_connect_status);
-        tvTitle = findViewById(R.id.tv_title);
-        tvDeviceNo = findViewById(R.id.tv_device_no);
-        llBack = findViewById(R.id.ll_back);
         gridView = findViewById(R.id.grid_view);
         emptyView = findViewById(R.id.empty_view);
-        llSystemSet = findViewById(R.id.ll_system_set);
-        tvCloseApp = findViewById(R.id.tv_close_app);
-        ll_right = findViewById(R.id.ll_right);
-        ll_connect = findViewById(R.id.ll_connect);
-        tv_reload = findViewById(R.id.tv_reload);
+
+        TextView tvTitle = findViewById(R.id.tv_title);
+        LinearLayout llBack = findViewById(R.id.ll_back);
+        TextView tv_reload = findViewById(R.id.tv_reload);
+        LinearLayout llSystemSet = findViewById(R.id.ll_system_set);
+        TextView tvCloseApp = findViewById(R.id.tv_close_app);
+        LinearLayout ll_right = findViewById(R.id.ll_right);
 
         llBack.setVisibility(View.GONE);
         tvTitle.setVisibility(View.VISIBLE);
@@ -104,8 +94,19 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
         tvCloseApp.setVisibility(View.GONE);
         llSystemSet.setOnClickListener(onSystemSetListener);
         tvCloseApp.setOnClickListener(onCloseApp);
+        tv_reload.setOnClickListener(onReload);
 
         EventBus.getDefault().register(this);
+
+        IConnectionManager connectionManager = EasySocket.getInstance().getDefconnection();
+        int connectionStatus = connectionManager.getConnectionStatus();
+        Log.d("当前连接状态:",connectionStatus+"");
+
+        if(connectionStatus == 2){
+            tcpStatusImg.setImageResource(R.drawable.icon_connect);
+        } else {
+            tcpStatusImg.setImageResource(R.drawable.icon_disconnect);
+        }
 
         /************************* mock ***********************/
 //        Map<String,Object> map = new HashMap<>();
@@ -129,7 +130,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
 
     }
 
-    @Subscriber(tag = "connect_status")
+    @Subscriber(tag = CONNECTION_CHANGED)
     public void onTcpConnectionChanged(boolean isConnect){
         if(isConnect){
             tcpStatusImg.setImageResource(R.drawable.icon_connect);
@@ -138,71 +139,8 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
         }
     }
 
-
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        IConnectionManager connectionManager = EasySocket.getInstance().getDefconnection();
-        int connectionStatus = connectionManager.getConnectionStatus();
-        LogUtil.d("当前连接状态:",connectionStatus+"");
-
-        if(connectionStatus == 2){
-            TcpUtil tcpUtil = new TcpUtil();
-            tcpUtil.getAllDevices();
-        }
-        mMyAdapter.updateStatus();
-        mMyAdapter.updateDlqImg();
-    }
-
-    @Override
-    public void onBackPressed() {
-        // 留空，不调用 super.onBackPressed() 以禁用返回按钮
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        EventBus.getDefault().unregister(this);
-    }
-
-    /**
-     * '系统设置'按钮点击事件监听
-     */
-    private final View.OnClickListener onSystemSetListener = v -> {
-        Intent intent = new Intent(this, SystemSetActivity.class);
-        startActivity(intent);
-    };
-
-    /**
-     * 退出app
-     */
-    private final View.OnClickListener onCloseApp = v -> {};
-
-    @Override
-    public void onSocketConnSuccess(SocketAddress socketAddress) {
-        LogUtil.d("端口" + socketAddress.getPort() + "---> 连接成功");
-    }
-
-    @Override
-    public void onSocketConnFail(SocketAddress socketAddress, boolean isNeedReconnect) {
-    }
-
-    @Override
-    public void onSocketDisconnect(SocketAddress socketAddress, boolean isNeedReconnect) {
-        LogUtil.d(socketAddress.getPort() + "端口" + "---> socket断开连接，是否需要重连：" + isNeedReconnect);
-        tcpStatusImg.setImageResource(R.drawable.icon_disconnect);
-    }
-
-    @Override
-    public void onSocketResponse(SocketAddress socketAddress, OriginReadData originReadData) {
-        LogUtil.d(socketAddress.getPort() + "端口" + "SocketActionListener收到数据-->" + originReadData.getBodyString());
-    }
-
-    @Override
-    public void onSocketResponse(SocketAddress socketAddress, String data) {
-        LogUtil.d(socketAddress.getPort() + "端口" + "SocketActionListener收到数据-->" + data);
+    @Subscriber(tag = RECEIVED_MESSAGE)
+    public void onReceivedMessage(String data){
         if(data == null) return;
 
         Map<String,Object> map = JsonUtil.toMap(data);
@@ -210,16 +148,17 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
 
         if(cmdType == null) return;
 
-        if(cmdType.equals(Constants.JCQ)){
-            Log.d("收到的tcp数据:",data);
-        }
-
         if(cmdType.equals("103")){
             //说明是 设备列表接口
+            hideLoading();
+            if(handler != null){
+                handler.removeCallbacksAndMessages(null);
+            }
+
             Boolean success = (Boolean) map.get("Success");
             if(success != null && success){
                 Map<String,Object> infoMap = (Map) map.get("Data");
-                deviceInfoListBean = DeviceInfoListBean.fromMap(infoMap);
+                DeviceInfoListBean deviceInfoListBean = DeviceInfoListBean.fromMap(infoMap);
                 if(deviceInfoListBean != null){
                     mDevices.clear();
 
@@ -383,8 +322,67 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
         }
     }
 
-    @Override
-    public void onSocketResponse(SocketAddress socketAddress, byte[] readData) {
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+
+
+        TcpUtil tcpUtil = new TcpUtil();
+        tcpUtil.getAllDevices();
+
+        mMyAdapter.updateStatus();
+        mMyAdapter.updateDlqImg();
     }
+
+    @Override
+    public void onBackPressed() {
+        // 留空，不调用 super.onBackPressed() 以禁用返回按钮
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
+    }
+
+    /**
+     * '系统设置'按钮点击事件监听
+     */
+    private final View.OnClickListener onSystemSetListener = v -> {
+        Intent intent = new Intent(this, SystemSetActivity.class);
+        startActivity(intent);
+    };
+
+    /**
+     * 退出app
+     */
+    private final View.OnClickListener onCloseApp = v -> {};
+
+    /**
+     * 重新加载列表
+     */
+    private final View.OnClickListener onReload = v -> {
+        showLoading("正在加载...");
+        TcpUtil tcpUtil = new TcpUtil();
+        tcpUtil.getAllDevices();
+        after10sHandle();
+    };
+
+    /**
+     *  5s后，若tcp无返回，则:
+     *  停止收消息、关闭loading、所有下方指令为false
+     */
+    private void after10sHandle(){
+        handler = new Handler();
+        handler.postDelayed(() -> {
+            if(handler != null){
+                handler.removeCallbacksAndMessages(null);
+            }
+            hideLoading();
+            ToastUtil.s("操作超时");
+        }, 5000);
+    }
+
 }

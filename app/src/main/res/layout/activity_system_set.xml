@@ -17,7 +17,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="系统设置"
-        android:textSize="@dimen/sp_14"
+        android:textSize="@dimen/sp_12"
+        android:textColor="@color/black"
         android:textStyle="bold"
         android:drawableLeft="@drawable/cylinder_rect_view"
         android:drawablePadding="@dimen/dp_5"
@@ -48,8 +49,7 @@
                 android:layout_height="wrap_content"
                 android:text="IP设置:"
                 android:textSize="@dimen/sp_12"
-                android:textColor="@color/black"
-                android:textStyle="bold" />
+                android:textColor="@color/black" />
 
             <TextView
                 android:id="@+id/tv_ip_set"
@@ -97,8 +97,7 @@
                 android:layout_height="wrap_content"
                 android:text="端口号:"
                 android:textSize="@dimen/sp_12"
-                android:textColor="@color/black"
-                android:textStyle="bold" />
+                android:textColor="@color/black" />
 
             <TextView
                 android:id="@+id/tv_port_set"
@@ -141,8 +140,7 @@
             android:layout_height="wrap_content"
             android:text="开启TCP"
             android:textSize="@dimen/sp_12"
-            android:textColor="@color/black"
-            android:textStyle="bold"/>
+            android:textColor="@color/black" />
 
         <TextView
             android:id="@+id/tv_tcp_switch"
@@ -162,8 +160,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="新增设备"
-        android:textSize="@dimen/sp_14"
+        android:textSize="@dimen/sp_12"
         android:textStyle="bold"
+        android:textColor="@color/black"
         android:drawableLeft="@drawable/cylinder_rect_view"
         android:drawablePadding="@dimen/dp_5"
         app:layout_constraintTop_toBottomOf="@+id/ll_switch_tcp"
@@ -186,7 +185,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="设置密码"
-        android:textSize="@dimen/sp_14"
+        android:textSize="@dimen/sp_12"
+        android:textColor="@color/black"
         android:textStyle="bold"
         android:drawableLeft="@drawable/cylinder_rect_view"
         android:drawablePadding="@dimen/dp_5"
@@ -229,7 +229,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="断路器类型"
-        android:textSize="@dimen/sp_14"
+        android:textSize="@dimen/sp_12"
+        android:textColor="@color/black"
         android:textStyle="bold"
         android:drawableLeft="@drawable/cylinder_rect_view"
         android:drawablePadding="@dimen/dp_5"

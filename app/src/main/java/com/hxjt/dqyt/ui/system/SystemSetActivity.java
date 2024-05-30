@@ -1,12 +1,15 @@
 package com.hxjt.dqyt.ui.system;
 
 
+import static com.hxjt.dqyt.app.Constants.CONNECTION_CHANGED;
 import static com.hxjt.dqyt.app.Constants.IP_ADDRESS;
 import static com.hxjt.dqyt.app.Constants.PORT;
+import static com.hxjt.dqyt.app.Constants.RECEIVED_MESSAGE;
 
 import android.app.Dialog;
 import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -24,9 +27,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.easysocket.EasySocket;
-import com.easysocket.entity.OriginReadData;
-import com.easysocket.entity.SocketAddress;
-import com.easysocket.interfaces.conn.ISocketActionListener;
+import com.easysocket.interfaces.conn.IConnectionManager;
 import com.hxjt.dqyt.R;
 import com.hxjt.dqyt.app.Constants;
 import com.hxjt.dqyt.base.BaseActivity;
@@ -38,31 +39,28 @@ import com.hxjt.dqyt.utils.SPUtil;
 import com.hxjt.dqyt.utils.TcpUtil;
 import com.hxjt.dqyt.utils.ToastUtil;
 
+import org.simple.eventbus.EventBus;
+import org.simple.eventbus.Subscriber;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implements SystemSetView, ISocketActionListener {
+public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implements SystemSetView{
 
-    private LinearLayout llBack;
-    private LinearLayout llIpSet;
     private TextView tvIpSet;
-    private LinearLayout llPortSet;
     private TextView tvPortSet;
     private TextView tvTcpTitle;
     private TextView tvTcpSwitch;
-    private TextView tvAddDevice;
     private ImageView tcpStatusImg;
-    private TextView tvUpdatePwd;
 
     private String deviceType;
     private String chl;
     private Dialog inputDialog;
-    private RadioGroup radioGroup;
-    private RadioButton rb_sk;
-    private RadioButton rb_lc;
-    private TextView tv_reset_pwd;
+    private Handler handler;
+    private boolean isOpenTcp = false;
+    private boolean isCloseTcp = false;
 
     @Override
     protected SystemSetPresenter createPresenter() {
@@ -79,21 +77,21 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
 
     @Override
     public void initView() {
-        llBack = findViewById(R.id.ll_back);
+        LinearLayout llBack = findViewById(R.id.ll_back);
         tcpStatusImg = findViewById(R.id.tv_connect_status);
-        llIpSet = findViewById(R.id.ll_ip_set);
+        LinearLayout llIpSet = findViewById(R.id.ll_ip_set);
         tvIpSet = findViewById(R.id.tv_ip_set);
-        llPortSet = findViewById(R.id.ll_port_set);
+        LinearLayout llPortSet = findViewById(R.id.ll_port_set);
         tvPortSet = findViewById(R.id.tv_port_set);
 
         tvTcpSwitch = findViewById(R.id.tv_tcp_switch);
         tvTcpTitle = findViewById(R.id.tv_tcp_title);
-        tvAddDevice = findViewById(R.id.tv_add_device);
-        tvUpdatePwd = findViewById(R.id.tv_update_pwd);
-        radioGroup = findViewById(R.id.rg_dlq_type);
-        rb_sk = findViewById(R.id.rb_sk);
-        rb_lc = findViewById(R.id.rb_lc);
-        tv_reset_pwd = findViewById(R.id.tv_reset_pwd);
+        TextView tvAddDevice = findViewById(R.id.tv_add_device);
+        TextView tvUpdatePwd = findViewById(R.id.tv_update_pwd);
+        RadioGroup radioGroup = findViewById(R.id.rg_dlq_type);
+        RadioButton rb_sk = findViewById(R.id.rb_sk);
+        RadioButton rb_lc = findViewById(R.id.rb_lc);
+        TextView tv_reset_pwd = findViewById(R.id.tv_reset_pwd);
 
         llBack.setOnClickListener(v -> finish());
         llIpSet.setOnClickListener(ipSetListener);
@@ -101,8 +99,21 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
         tvTcpSwitch.setOnClickListener(tcpSwitchListener);
         tvAddDevice.setOnClickListener(addDeviceListener);
         tvUpdatePwd.setOnClickListener(onUpdatePwd);
-        radioGroup.setOnCheckedChangeListener(onCheckedChangeListener);
+        radioGroup.setOnCheckedChangeListener(radioGroupCheckedChangeListener);
         tv_reset_pwd.setOnClickListener(onResetPassword);
+
+        IConnectionManager connectionManager = EasySocket.getInstance().getDefconnection();
+        int connectionStatus = connectionManager.getConnectionStatus();
+
+        if(connectionStatus == 2){
+            tcpStatusImg.setImageResource(R.drawable.icon_connect);
+            tvTcpSwitch.setText("关闭");
+            tvTcpTitle.setText("关闭TCP");
+        } else {
+            tcpStatusImg.setImageResource(R.drawable.icon_disconnect);
+            tvTcpSwitch.setText("开启");
+            tvTcpTitle.setText("开启TCP");
+        }
 
         String dlqType = SPUtil.getString(Constants.DLQ_TYPE,"sk");
         if(dlqType.equals("sk")){
@@ -115,33 +126,84 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
 
         String ip = SPUtil.getString(IP_ADDRESS, "");
         tvIpSet.setText(ip);
-        int port = (int) SPUtil.get(PORT, -1);
-        tvPortSet.setText(String.valueOf(port));
+        String port = SPUtil.getString(PORT, "");
+        tvPortSet.setText(port);
 
-        EasySocket.getInstance().subscribeSocketAction(this);
+        EventBus.getDefault().register(this);
+    }
 
+    @Subscriber(tag = CONNECTION_CHANGED)
+    public void onTcpConnectionChanged(boolean isConnect){
+
+        if(isConnect && isOpenTcp){
+            if(handler != null){
+                handler.removeCallbacksAndMessages(null);
+            }
+            isOpenTcp = false;
+            hideLoading();
+            ToastUtil.s("TCP连接成功");
+        } else if(!isConnect && isCloseTcp){
+            if(handler != null){
+                handler.removeCallbacksAndMessages(null);
+            }
+            isCloseTcp = false;
+            hideLoading();
+            ToastUtil.s("TCP已关闭");
+        }
+
+        if(isConnect){
+            tcpStatusImg.setImageResource(R.drawable.icon_connect);
+            tvTcpSwitch.setText("关闭");
+            tvTcpTitle.setText("关闭TCP");
+        } else {
+            tcpStatusImg.setImageResource(R.drawable.icon_disconnect);
+            tvTcpSwitch.setText("开启");
+            tvTcpTitle.setText("开启TCP");
+        }
+    }
+
+    @Subscriber(tag = RECEIVED_MESSAGE)
+    public void onReceivedMessage(String data){
+        Map<String,Object> map = JsonUtil.toMap(data);
+        String cmdType = (String) map.get("TcpCmdType");
+
+        if(cmdType != null){
+            String message = (String) map.get("Message");
+            Boolean success = (Boolean) map.get("Success");
+
+            if(cmdType.equals("100")){
+                hideLoading();
+                if(message != null){
+                    ToastUtil.s(message);
+                }
+                if(success!=null&& success){
+                    inputDialog.dismiss();
+                }
+            }
+        }
     }
 
     View.OnClickListener ipSetListener = v -> showInputDialog(0);
 
     View.OnClickListener portSetListener = v -> showInputDialog(1);
 
+    /**
+     * 开启或关闭TCP
+     */
     View.OnClickListener tcpSwitchListener = v -> {
-//        boolean isTcpConnected = TcpClient.getInstance().isConnected();
-//        if(isTcpConnected){
-//            showLoading("正在关闭...");
-//            TcpClient.getInstance().close();
-//        } else {
-//            showLoading("正在开启...");
-//            new Thread(() -> {
-//                TcpClient.getInstance().connectToServer();
-//                TcpClient.getInstance().startMessageReceiver();
-//            }).start();
-//
-//        }
+        if(tvTcpSwitch.getText().equals("开启")){
+            showLoading("正在关闭...");
+            isCloseTcp = true;
+            EasySocket.getInstance().disconnect(false);
+        } else {
+            isOpenTcp = true;
+            showLoading("正在开启...");
+            EasySocket.getInstance().connect();
+        }
+        after5sHandle();
     };
 
-    RadioGroup.OnCheckedChangeListener onCheckedChangeListener = (group, checkedId) -> {
+    RadioGroup.OnCheckedChangeListener radioGroupCheckedChangeListener = (group, checkedId) -> {
         switch (checkedId) {
             case R.id.rb_sk:
                 SPUtil.putString(Constants.DLQ_TYPE,"sk");
@@ -220,7 +282,7 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
         } else if(type == 1){
             input.setText(port);
         }
-
+        input.setSelection(input.getText().length());
         inputDialog.findViewById(R.id.btn_confirm).setOnClickListener(v -> {
             if (TextUtils.isEmpty(input.getText().toString())) {
                 ToastUtil.s("请输入"+ (type == 0 ? "IP地址" : "端口号"));
@@ -430,54 +492,31 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
     }
 
     @Override
-    public void onSocketConnSuccess(SocketAddress socketAddress) {
-        tcpStatusImg.setImageResource(R.drawable.icon_connect);
-        tvTcpSwitch.setText("关闭");
-        tvTcpTitle.setText("关闭TCP");
-    }
-
-    @Override
-    public void onSocketConnFail(SocketAddress socketAddress, boolean isNeedReconnect) {
-        tcpStatusImg.setImageResource(R.drawable.icon_disconnect);
-        tvTcpSwitch.setText("开启");
-        tvTcpTitle.setText("开启TCP");
-    }
-
-    @Override
-    public void onSocketDisconnect(SocketAddress socketAddress, boolean isNeedReconnect) {
-        tcpStatusImg.setImageResource(R.drawable.icon_disconnect);
-        tvTcpSwitch.setText("开启");
-        tvTcpTitle.setText("开启TCP");
-    }
-
-    @Override
-    public void onSocketResponse(SocketAddress socketAddress, OriginReadData originReadData) {
-
-    }
-
-    @Override
-    public void onSocketResponse(SocketAddress socketAddress, String data) {
-        Map<String,Object> map = JsonUtil.toMap(data);
-        String cmdType = (String) map.get("TcpCmdType");
-
-        if(cmdType != null){
-            String message = (String) map.get("Message");
-            Boolean success = (Boolean) map.get("Success");
-
-            if(cmdType.equals("100")){
-                hideLoading();
-                if(message != null){
-                    ToastUtil.s(message);
-                }
-                if(success!=null&& success){
-                    inputDialog.dismiss();
-                }
-            }
+    protected void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
+        if(handler != null){
+            handler.removeCallbacksAndMessages(null);
         }
     }
 
-    @Override
-    public void onSocketResponse(SocketAddress socketAddress, byte[] readData) {
+    /**
+     *  5s后，若tcp无返回，则:
+     *  停止收消息、关闭loading、所有下发指令为false
+     */
+    private void after5sHandle(){
+        handler = new Handler();
+        handler.postDelayed(() -> {
+            if(handler != null){
+                handler.removeCallbacksAndMessages(null);
+            }
+            hideLoading();
+            orderToFalse();
+            ToastUtil.s("操作失败");
+        }, 5000);
+    }
 
+    private void orderToFalse(){
+        isOpenTcp = isCloseTcp = false;
     }
 }

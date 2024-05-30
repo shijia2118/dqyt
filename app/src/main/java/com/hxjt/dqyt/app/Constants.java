@@ -20,9 +20,12 @@ public class Constants {
     public static final String PASSWORD_FHZ = "password_fhz"; //分合闸密码
 
     public static final String DEFAULT_IP_ADDRESS = "192.168.1.100"; //TCP默认IP
-    public static final int DEFAULT_PORT = 6789; //TCP默认端口号
+    public static final String DEFAULT_PORT = "6789"; //TCP默认端口号
     public static final String CONFIG_MENU_CODES = "config_menu_codes"; //已配置的菜单
     public static final String DLQ_TYPE = "dlq_type";
+
+    public static final String RECEIVED_MESSAGE = "received_message";
+    public static final String CONNECTION_CHANGED = "connection_changed";
 
     public static final String[] ALL_MENU_CODES = new String[]{
             "bpq",

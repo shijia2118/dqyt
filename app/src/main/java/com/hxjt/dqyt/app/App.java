@@ -1,11 +1,15 @@
 package com.hxjt.dqyt.app;
 
+import static com.hxjt.dqyt.app.Constants.CONNECTION_CHANGED;
 import static com.hxjt.dqyt.app.Constants.DEFAULT_IP_ADDRESS;
 import static com.hxjt.dqyt.app.Constants.DEFAULT_PORT;
 import static com.hxjt.dqyt.app.Constants.IP_ADDRESS;
 import static com.hxjt.dqyt.app.Constants.PORT;
+import static com.hxjt.dqyt.app.Constants.RECEIVED_MESSAGE;
 
 import android.content.Context;
+import android.util.Log;
+
 import androidx.multidex.MultiDex;
 
 import com.easysocket.EasySocket;
@@ -14,7 +18,6 @@ import com.easysocket.entity.OriginReadData;
 import com.easysocket.entity.SocketAddress;
 import com.easysocket.interfaces.conn.ISocketActionListener;
 import com.easysocket.interfaces.conn.SocketActionListener;
-import com.easysocket.utils.LogUtil;
 import com.hxjt.dqyt.base.BaseApplication;
 import com.hxjt.dqyt.utils.SPUtil;
 
@@ -44,19 +47,19 @@ public class App extends BaseApplication {
     private void initEasySocket() {
 
         String ip = SPUtil.getString(IP_ADDRESS,"");
-        int port = (int) SPUtil.get(PORT,-1);
+        String port = SPUtil.getString(PORT,"");
 
         if(ip.isEmpty()){
             ip = DEFAULT_IP_ADDRESS;
             SPUtil.putString(IP_ADDRESS,DEFAULT_IP_ADDRESS);
         }
-        if(port == -1){
+        if(port.isEmpty()){
             port = DEFAULT_PORT;
-            SPUtil.put(PORT,DEFAULT_PORT);
+            SPUtil.putString(PORT,DEFAULT_PORT);
         }
         // socket配置
         EasySocketOptions options = new EasySocketOptions.Builder()
-                .setSocketAddress(new SocketAddress(ip,port))
+                .setSocketAddress(new SocketAddress(ip,Integer.parseInt(port)))
                 .setMaxReadBytes(1024*50)
                 .build();
 
@@ -72,19 +75,19 @@ public class App extends BaseApplication {
         @Override
         public void onSocketConnSuccess(SocketAddress socketAddress) {
             super.onSocketConnSuccess(socketAddress);
-            EventBus.getDefault().post(true, "connect_status");
+            EventBus.getDefault().post(true, CONNECTION_CHANGED);
         }
 
         @Override
         public void onSocketConnFail(SocketAddress socketAddress, boolean isNeedReconnect) {
             super.onSocketConnFail(socketAddress, isNeedReconnect);
-            EventBus.getDefault().post(false, "connect_status");
+            EventBus.getDefault().post(false, CONNECTION_CHANGED);
         }
 
         @Override
         public void onSocketDisconnect(SocketAddress socketAddress, boolean isNeedReconnect) {
             super.onSocketDisconnect(socketAddress, isNeedReconnect);
-            EventBus.getDefault().post(false, "connect_status");
+            EventBus.getDefault().post(false, CONNECTION_CHANGED);
         }
 
         @Override
@@ -100,13 +103,11 @@ public class App extends BaseApplication {
         @Override
         public void onSocketResponse(SocketAddress socketAddress, String readData) {
             super.onSocketResponse(socketAddress, readData);
-            LogUtil.d(socketAddress.getPort() + "端口" + "SocketActionListener收到数据-->" + readData);
+            Log.d("收到数据------------->",readData);
 
-            EventBus.getDefault().post(false, "connect_status");
+            EventBus.getDefault().post(readData, RECEIVED_MESSAGE);
         }
     };
-
-
 
     public static Context getContext() {
         return context;

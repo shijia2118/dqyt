@@ -62,7 +62,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="当前连接状态"
-                android:textSize="@dimen/sp_8"
+                android:textSize="@dimen/sp_10"
                 android:layout_marginEnd="@dimen/dp_2"
                 android:textColor="@color/black" />
 
