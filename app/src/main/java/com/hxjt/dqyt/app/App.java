@@ -2,6 +2,8 @@ package com.hxjt.dqyt.app;
 
 import static com.hxjt.dqyt.app.Constants.DEFAULT_IP_ADDRESS;
 import static com.hxjt.dqyt.app.Constants.DEFAULT_PORT;
+import static com.hxjt.dqyt.app.Constants.IP_ADDRESS;
+import static com.hxjt.dqyt.app.Constants.PORT;
 
 import android.app.Activity;
 import android.app.Application;
@@ -39,9 +41,15 @@ public class App extends BaseApplication {
     public void onCreate() {
         super.onCreate();
         initRxHttpUtils();
-        //判断应用是否在前台，如果在前台，则重连websocket
-        SPUtil.putString(Constants.IP_ADDRESS,DEFAULT_IP_ADDRESS);
-        SPUtil.putString(Constants.PORT,DEFAULT_PORT);
+
+        String ip = SPUtil.getString(IP_ADDRESS,"");
+        String port = SPUtil.getString(PORT,"");
+        if(ip.isEmpty()){
+            SPUtil.putString(IP_ADDRESS,DEFAULT_IP_ADDRESS);
+        }
+        if(port.isEmpty()){
+            SPUtil.putString(PORT,DEFAULT_PORT);
+        }
 
         registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
 
