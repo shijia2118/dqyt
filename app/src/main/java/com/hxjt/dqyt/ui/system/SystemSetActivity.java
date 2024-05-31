@@ -192,13 +192,13 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
      */
     View.OnClickListener tcpSwitchListener = v -> {
         if(tvTcpSwitch.getText().equals("开启")){
-            showLoading("正在关闭...");
-            isCloseTcp = true;
-            EasySocket.getInstance().disconnect(false);
-        } else {
             isOpenTcp = true;
             showLoading("正在开启...");
             EasySocket.getInstance().connect();
+        } else {
+            showLoading("正在关闭...");
+            isCloseTcp = true;
+            EasySocket.getInstance().disconnect(false);
         }
         after5sHandle();
     };

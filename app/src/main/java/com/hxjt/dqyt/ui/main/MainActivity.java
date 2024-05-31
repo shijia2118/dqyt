@@ -326,9 +326,6 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
     @Override
     protected void onResume() {
         super.onResume();
-
-
-
         TcpUtil tcpUtil = new TcpUtil();
         tcpUtil.getAllDevices();
 
@@ -367,14 +364,14 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
         showLoading("正在加载...");
         TcpUtil tcpUtil = new TcpUtil();
         tcpUtil.getAllDevices();
-        after10sHandle();
+        after5sHandle();
     };
 
     /**
      *  5s后，若tcp无返回，则:
      *  停止收消息、关闭loading、所有下方指令为false
      */
-    private void after10sHandle(){
+    private void after5sHandle(){
         handler = new Handler();
         handler.postDelayed(() -> {
             if(handler != null){

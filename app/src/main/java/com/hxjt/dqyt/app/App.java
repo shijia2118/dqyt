@@ -31,6 +31,7 @@ public class App extends BaseApplication {
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(base);
         MultiDex.install(this);
+        context = base;
     }
 
     @Override
