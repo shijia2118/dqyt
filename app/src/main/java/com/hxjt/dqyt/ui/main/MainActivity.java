@@ -6,6 +6,7 @@ import static com.hxjt.dqyt.app.Constants.RECEIVED_MESSAGE;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
@@ -141,7 +142,8 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
 
     @Subscriber(tag = RECEIVED_MESSAGE)
     public void onReceivedMessage(String data){
-        if(data == null) return;
+        if(TextUtils.isEmpty(data))
+            return;
 
         Map<String,Object> map = JsonUtil.toMap(data);
         String cmdType = (String) map.get("TcpCmdType");

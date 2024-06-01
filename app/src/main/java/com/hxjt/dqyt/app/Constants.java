@@ -27,6 +27,18 @@ public class Constants {
     public static final String RECEIVED_MESSAGE = "received_message";
     public static final String CONNECTION_CHANGED = "connection_changed";
 
+    public static final String BPQ ="bpq" ; //变频器
+    public static final String DLQ ="dlq" ; //断路器
+    public static final String WSD_CGQ ="wsdcgq" ; //温湿度传感器
+    public static final String ZS_CGQ ="zscgq" ; //噪声传感器
+    public static final String YW_CGQ ="ywcgq" ; //烟雾传感器
+    public static final String CLZS_CGQ ="clzscgq" ; //齿轮转速传感器
+    public static final String ZDJC_CGQ ="zdjccgq" ; //震动监测传感器
+    public static final String SJ_BSQ ="sjcgq" ; //水浸变送器
+    public static final String YM_CSY ="ymcsy" ; //液面测试仪
+    public static final String SK645 ="sk645" ; //塑壳
+    public static final String JCQ ="jcq" ; //接触器
+
     public static final String[] ALL_MENU_CODES = new String[]{
             "bpq",
             "wsdcgq",
@@ -49,19 +61,6 @@ public class Constants {
             "sjcgq",
             "ymcsy",
     };
-
-    public static final String BPQ ="bpq" ; //变频器
-    public static final String DLQ ="dlq" ; //断路器
-    public static final String WSD_CGQ ="wsdcgq" ; //温湿度传感器
-    public static final String ZS_CGQ ="zscgq" ; //噪声传感器
-    public static final String YW_CGQ ="ywcgq" ; //烟雾传感器
-    public static final String CLZS_CGQ ="clzscgq" ; //齿轮转速传感器
-    public static final String ZDJC_CGQ ="zdjccgq" ; //震动监测传感器
-    public static final String SJ_BSQ ="sjcgq" ; //水浸变送器
-    public static final String YM_CSY ="ymcsy" ; //液面测试仪
-    public static final String SK645 ="sk645" ; //塑壳
-    public static final String JCQ ="jcq" ; //接触器
-
 
     public  List<MenuButtonBean> MENU_BUTTON_BEAN_LIST = new ArrayList<MenuButtonBean>() {{
         add(createMenu("变频器", R.drawable.icon_bpq_blue,"bpq"));

@@ -1,7 +1,9 @@
 package com.hxjt.dqyt.ui.detail;
 
 import static com.hxjt.dqyt.app.Constants.CONNECTION_CHANGED;
+import static com.hxjt.dqyt.app.Constants.DLQ_TYPE;
 import static com.hxjt.dqyt.app.Constants.RECEIVED_MESSAGE;
+import static com.hxjt.dqyt.app.Constants.SK645;
 
 import android.app.Dialog;
 import android.content.Context;
@@ -96,6 +98,7 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
     @Subscriber(tag = RECEIVED_MESSAGE)
     public void onReceivedMessage(String readData){
         Map<String,Object> map = JsonUtil.toMap(readData);
+
         String cmdType = (String) map.get("TcpCmdType");
         String message = (String) map.get("Message");
         Boolean success = (Boolean) map.get("Success");
@@ -136,9 +139,11 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
                 if(deviceType.equals(Constants.DLQ)){
                     deviceCode = (String) map.get("SN");
                 }
-                //收到的tcp数据包属于当前设备
-                //设备类型，设备编号均一致，可以锁定是当前设备
-                if(cmdType.equals(deviceType) && deviceCode != null && deviceCode.equals(deviceInfoBean.getAddr())){
+
+                if(deviceCode == null) return;
+
+                // 收到的tcp数据包属于当前设备(设备类型和设备编号均一致)
+                if(cmdType.equals(deviceType)  && deviceCode.equals(deviceInfoBean.getAddr())){
                     hideLoading();
 
                     String msg = getMsgByOperationType();
@@ -152,11 +157,13 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
 
                     mReceivedTcpData = map;
 
-                    if(deviceType.equals(Constants.SK645) && SPUtil.getString(Constants.DLQ_TYPE,"sk").equals("lc")){
+                    // 当前设备是`量测断路器`时，
+                    // 需要处理个别参数(A相电流、B相电流、C相电流)的小数点位数。
+                    if(deviceType.equals(SK645) && SPUtil.getString(DLQ_TYPE,"sk").equals("lc")){
                         for (Map.Entry<String, Object> entry : mReceivedTcpData.entrySet()) {
                             String key = entry.getKey();
                             boolean needParse = TextUtil.isEqualIgnoreCase(key,"DqAxiangDianLiu") || TextUtil.isEqualIgnoreCase(key,"DqBxiangDianLiu")||
-                                    TextUtil.isEqualIgnoreCase(key,"DqCxiangDianLiu") ||  TextUtil.isEqualIgnoreCase(key,"DqCxiangDianLiu");
+                                    TextUtil.isEqualIgnoreCase(key,"DqCxiangDianLiu");
                             if (needParse) {
                                 String str = (String) entry.getValue();
                                 BigDecimal value = new BigDecimal(str);
@@ -168,7 +175,8 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
 
                     statusAdapter.update(DeviceDetailActivity.this,stateLabels,mReceivedTcpData);
 
-                    if(deviceType.equals(Constants.SK645) && (isFz || isHz) ){
+                    // 断路器分合闸操作后，再下发cmdType=11的指令。
+                    if(deviceType.equals(SK645) && (isFz || isHz) ){
                         orderToFalse();
                         sendMessage("11");
                     }
@@ -206,8 +214,8 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
 
             int drawable = DeviceUtil.getDeviceImageByType(deviceInfoBean.getDev_type());
 
-            if(deviceInfoBean.getDev_type()!=null && deviceInfoBean.getDev_type().equals(Constants.SK645)){
-                String dlqType = SPUtil.getString(Constants.DLQ_TYPE,"sk");
+            if(deviceInfoBean.getDev_type()!=null && deviceInfoBean.getDev_type().equals(SK645)){
+                String dlqType = SPUtil.getString(DLQ_TYPE,"sk");
                 if(dlqType.equals("lc")){
                     drawable = R.drawable.icon_sk_white;
                 }
@@ -237,7 +245,7 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
     }
 
     private void sendMessage_sk(){
-        String type = SPUtil.getString(Constants.DLQ_TYPE,"sk");
+        String type = SPUtil.getString(DLQ_TYPE,"sk");
         if(type.equals("sk")){
             sendMessage("1");
             new Handler(Looper.getMainLooper()).postDelayed(() -> sendMessage("11"), 500);
@@ -260,7 +268,7 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
     private void sendMessage_all(){
         if(deviceInfoBean.getDev_type()!=null && deviceInfoBean.getDev_type().equals(Constants.YM_CSY)){
             sendMessage("2");
-        } else if(deviceInfoBean.getDev_type()!=null && deviceInfoBean.getDev_type().equals(Constants.SK645)){
+        } else if(deviceInfoBean.getDev_type()!=null && deviceInfoBean.getDev_type().equals(SK645)){
             sendMessage_sk();
         } else if(deviceInfoBean.getDev_type()!=null && deviceInfoBean.getDev_type().equals(Constants.BPQ)){
             sendMessage_bpq();
@@ -280,8 +288,8 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
 
             operationButtonLabels = DeviceUtil.getOperationButtonsByType(deviceType);
 
-            if(deviceInfoBean!=null && deviceInfoBean.getDev_type()!=null && deviceInfoBean.getDev_type().equals(Constants.SK645)){
-                String dlqType = SPUtil.getString(Constants.DLQ_TYPE,"sk");
+            if(deviceInfoBean!=null && deviceInfoBean.getDev_type()!=null && deviceInfoBean.getDev_type().equals(SK645)){
+                String dlqType = SPUtil.getString(DLQ_TYPE,"sk");
                 if(dlqType.equals("lc")){
                     operationButtonLabels = new String[]{"修改名称","删除","遥测"};
                 }
@@ -353,7 +361,7 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
 
             stateLabels = DeviceUtil.getDeviceStatusByType(deviceType);
 
-            if(deviceType.equals(Constants.SK645) && SPUtil.getString(Constants.DLQ_TYPE,"sk").equals("lc")){
+            if(deviceType.equals(SK645) && SPUtil.getString(DLQ_TYPE,"sk").equals("lc")){
                 //量测去掉"闸位状态"
                 stateLabels = DeviceUtil.removeFirstElement(stateLabels);
             }

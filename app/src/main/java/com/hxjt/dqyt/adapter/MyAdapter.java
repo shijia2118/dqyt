@@ -108,7 +108,7 @@ public class MyAdapter extends BaseAdapter {
             String c0 = mData.get(position).getAddr();
             String c1 = deviceInfoBean.getAddr();
 
-            if(t0!=null&&t1!=null&&c0!=null&&c1!=null){
+            if(t0!=null&&t1!=null&&c0!=null&&c1!=null) {
                 if(t0.equals(t1) && c0.equals(c1)){
                     viewHolder.tvTimeValue.setText(mTimeValue);
 

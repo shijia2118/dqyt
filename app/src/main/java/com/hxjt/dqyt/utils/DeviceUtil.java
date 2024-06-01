@@ -274,7 +274,7 @@ public class DeviceUtil {
                 sjbsqArray[1] = new HashMap<>();
                 sjbsqArray[1].put("title", "水浸状态1");
                 sjbsqArray[1].put("resource_id", R.drawable.icon_sjzt);
-                sjbsqArray[1].put("tag", "sjStatus1");
+                sjbsqArray[1].put("tag", "D");
 
                 sjbsqArray[2] = new HashMap<>();
                 sjbsqArray[2].put("title", "水浸状态2");

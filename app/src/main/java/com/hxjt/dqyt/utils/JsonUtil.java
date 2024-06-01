@@ -159,8 +159,7 @@ public class JsonUtil {
         try {
             // 使用Gson将JSON字符串转换为Map对象
             Type type = new TypeToken<Map<String, Object>>(){}.getType();
-            Map<String, Object> map = gson.fromJson(jsonString, type);
-            return map;
+            return gson.fromJson(jsonString, type);
         } catch (JsonSyntaxException e) {
             // JSON语法错误
             e.printStackTrace();
