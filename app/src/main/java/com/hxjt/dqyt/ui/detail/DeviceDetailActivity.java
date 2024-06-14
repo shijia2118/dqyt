@@ -47,15 +47,12 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
     private TextView tvDeviceNo;
     private TextView tvDeviceCode;
     private TextView tvDeviceName;
-    private TextView tvWarningState;
     private ImageView ivImage;
-    private TextView tvDeviceType;
     private GridView operationGridView;
     private String[] operationButtonLabels;
     private MyCustomGridView stateGridView;
     private Map<String,Object>[] stateLabels;
     private Map<String,Object> mReceivedTcpData;
-    private TextButtonAdapter textButtonAdapter;
 
     private String tempDeviceName;
 
@@ -98,11 +95,11 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
         tvDeviceNo = findViewById(R.id.tv_device_no);
         tvDeviceCode = findViewById(R.id.tv_device_code);
         tvDeviceName = findViewById(R.id.tv_device_name);
-        tvWarningState = findViewById(R.id.tv_warning_state);
+        TextView tvWarningState = findViewById(R.id.tv_warning_state);
         operationGridView = findViewById(R.id.grid_view);
         stateGridView = findViewById(R.id.state_grid_view);
         ivImage = findViewById(R.id.iv_image);
-        tvDeviceType = findViewById(R.id.tv_device_type);
+        TextView tvDeviceType = findViewById(R.id.tv_device_type);
 
         llBack.setOnClickListener(v -> finish());
 
@@ -198,7 +195,7 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
                 }
             }
 
-            textButtonAdapter = new TextButtonAdapter(this, operationButtonLabels);
+            TextButtonAdapter textButtonAdapter = new TextButtonAdapter(this, operationButtonLabels);
             operationGridView.setAdapter(textButtonAdapter);
 
             // 设置水平间距和垂直间距
