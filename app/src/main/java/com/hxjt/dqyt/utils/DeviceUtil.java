@@ -147,7 +147,7 @@ public class DeviceUtil {
                 wsdcgqArray[1].put("tag", "wd");
 
                 wsdcgqArray[2] = new HashMap<>();
-                wsdcgqArray[2].put("title", "湿度(°C)");
+                wsdcgqArray[2].put("title", "湿度(%)");
                 wsdcgqArray[2].put("resource_id", R.drawable.icon_shidu);
                 wsdcgqArray[2].put("tag", "sd");
                 return wsdcgqArray;

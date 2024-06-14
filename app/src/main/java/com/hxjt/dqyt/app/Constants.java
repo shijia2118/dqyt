@@ -23,6 +23,8 @@ public class Constants {
     public static final String DEFAULT_PORT = "6789"; //TCP默认端口号
     public static final String CONFIG_MENU_CODES = "config_menu_codes"; //已配置的菜单
     public static final String DLQ_TYPE = "dlq_type";
+    public static final String STATIC_IP = "static_ip";
+    public static final String WANG_GUAN_CODE = "wang_guan_code";
 
     public static final String[] ALL_MENU_CODES = new String[]{
             "bpq",

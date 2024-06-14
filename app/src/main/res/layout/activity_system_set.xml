@@ -132,7 +132,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:gravity="center_vertical"
         android:paddingHorizontal="@dimen/dp_30"
-        android:paddingVertical="@dimen/dp_10"
+        android:paddingVertical="@dimen/dp_5"
         android:orientation="horizontal">
 
         <TextView
@@ -156,6 +156,34 @@
             android:background="@color/button"/>
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/tv_static_ip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="静态IP"
+        android:textSize="@dimen/sp_14"
+        android:textStyle="bold"
+        android:drawableLeft="@drawable/cylinder_rect_view"
+        android:drawablePadding="@dimen/dp_5"
+        app:layout_constraintTop_toBottomOf="@+id/ll_switch_tcp"
+        app:layout_constraintStart_toStartOf="@+id/tv_add_device_title"
+        android:layout_marginTop="@dimen/dp_20"/>
+
+    <TextView
+        android:id="@+id/tv_static_ip_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="@dimen/dp_20"
+        android:paddingVertical="@dimen/dp_5"
+        app:layout_constraintStart_toEndOf="@+id/tv_static_ip"
+        app:layout_constraintTop_toTopOf="@+id/tv_static_ip"
+        app:layout_constraintBottom_toBottomOf="@+id/tv_static_ip"
+        android:layout_marginStart="@dimen/dp_20"
+        android:text="配置静态IP"
+        android:textColor="@color/white"
+        android:textSize="@dimen/sp_10"
+        android:background="@color/button"/>
+
 
     <TextView
         android:id="@+id/tv_add_device_title"
@@ -166,9 +194,9 @@
         android:textStyle="bold"
         android:drawableLeft="@drawable/cylinder_rect_view"
         android:drawablePadding="@dimen/dp_5"
-        app:layout_constraintTop_toBottomOf="@+id/ll_switch_tcp"
+        app:layout_constraintTop_toBottomOf="@+id/tv_static_ip"
         app:layout_constraintStart_toStartOf="@+id/rl_app_bar"
-        android:layout_marginTop="@dimen/dp_30"/>
+        android:layout_marginTop="@dimen/dp_20"/>
 
     <TextView
         android:id="@+id/tv_add_device"
@@ -192,7 +220,7 @@
         android:drawablePadding="@dimen/dp_5"
         app:layout_constraintTop_toBottomOf="@+id/tv_add_device_title"
         app:layout_constraintStart_toStartOf="@+id/tv_add_device_title"
-        android:layout_marginTop="@dimen/dp_30"/>
+        android:layout_marginTop="@dimen/dp_20"/>
 
     <TextView
         android:id="@+id/tv_update_pwd"
@@ -235,7 +263,7 @@
         android:drawablePadding="@dimen/dp_5"
         app:layout_constraintTop_toBottomOf="@+id/tv_edit_pwd"
         app:layout_constraintStart_toStartOf="@+id/tv_edit_pwd"
-        android:layout_marginTop="@dimen/dp_30"/>
+        android:layout_marginTop="@dimen/dp_20"/>
 
     <!-- 添加单选按钮组 -->
     <RadioGroup

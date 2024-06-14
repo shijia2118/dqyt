@@ -64,8 +64,25 @@ public class TcpUtil {
         Gson gson = new Gson();
         String jsonString = gson.toJson(map);
         TcpClient.getInstance().sendMessage(jsonString);
+    }
 
+    public void setStaticIp(String ip,String wgCode){
 
+        Map<String,Object> payloadMap = new HashMap<>();
+        payloadMap.put("ip",ip);
+        payloadMap.put("wg",wgCode);
+        Gson gson = new Gson();
+        String payloadJson = gson.toJson(payloadMap);
+
+        Map<String,Object> map = new HashMap<>();
+        map.put("DeviceType","");
+        map.put("DeviceCode","");
+        map.put("CmdType","1002");
+        map.put("PayloadJson",payloadJson);
+        map.put("jcqdz","");
+
+        String jsonString = gson.toJson(map);
+        TcpClient.getInstance().sendMessage(jsonString);
     }
 
 }

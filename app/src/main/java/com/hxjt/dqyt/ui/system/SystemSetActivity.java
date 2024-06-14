@@ -1,12 +1,16 @@
 package com.hxjt.dqyt.ui.system;
 
 
+import static com.hxjt.dqyt.app.Constants.STATIC_IP;
+import static com.hxjt.dqyt.app.Constants.WANG_GUAN_CODE;
+
 import android.app.Dialog;
 import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -96,6 +100,7 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
         rb_sk = findViewById(R.id.rb_sk);
         rb_lc = findViewById(R.id.rb_lc);
         tv_reset_pwd = findViewById(R.id.tv_reset_pwd);
+        TextView tv_static_ip_btn = findViewById(R.id.tv_static_ip_btn);
 
         llBack.setOnClickListener(v -> finish());
         llIpSet.setOnClickListener(ipSetListener);
@@ -105,6 +110,7 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
         tvUpdatePwd.setOnClickListener(onUpdatePwd);
         radioGroup.setOnCheckedChangeListener(onCheckedChangeListener);
         tv_reset_pwd.setOnClickListener(onResetPassword);
+        tv_static_ip_btn.setOnClickListener(onSetStaticIp);
 
         String dlqType = SPUtil.getString(Constants.DLQ_TYPE,"sk");
         if(dlqType.equals("sk")){
@@ -165,6 +171,10 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
         } else {
             showUpdateDialog();
         }
+    };
+
+    View.OnClickListener onSetStaticIp = v -> {
+        showSetStaticIpDialog();
     };
 
     View.OnClickListener onResetPassword = new View.OnClickListener() {
@@ -248,7 +258,7 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
     private void showSetPwdDialog() {
         Dialog inputDialog = new Dialog(this);
         inputDialog.setContentView(R.layout.update_pwd_dialog);
-        inputDialog.setCancelable(true);
+        inputDialog.setCancelable(false);
         inputDialog.getWindow().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.transparent)));
         EditText firstPwd = inputDialog.findViewById(R.id.et_old_pwd);
         EditText secondPwd = inputDialog.findViewById(R.id.et_new_pwd);
@@ -297,7 +307,7 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
     private void showUpdateDialog() {
         Dialog inputDialog = new Dialog(this);
         inputDialog.setContentView(R.layout.update_pwd_dialog);
-        inputDialog.setCancelable(true);
+        inputDialog.setCancelable(false);
         inputDialog.getWindow().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.transparent)));
         EditText etOldPwd = inputDialog.findViewById(R.id.et_old_pwd);
         EditText etNewPwd = inputDialog.findViewById(R.id.et_new_pwd);
@@ -332,6 +342,65 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
         });
 
         etNewPwd.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE ||
+                    (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
+                return true;
+            }
+            return false;
+        });
+        inputDialog.show();
+    }
+
+    private void showSetStaticIpDialog() {
+        Dialog inputDialog = new Dialog(this);
+        inputDialog.setContentView(R.layout.set_static_ip_dialog);
+        inputDialog.setCancelable(false);
+        inputDialog.getWindow().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.transparent)));
+
+        EditText etIp = inputDialog.findViewById(R.id.et_static_ip);
+        EditText etWg = inputDialog.findViewById(R.id.et_wg_address);
+
+        String localIp = SPUtil.getString(STATIC_IP,"");
+        String localWg = SPUtil.getString(WANG_GUAN_CODE,"");
+
+        etIp.setText(localIp);
+        etIp.setSelection(localIp.length());
+        etWg.setText(localWg);
+        etWg.setSelection(localWg.length());
+
+        inputDialog.findViewById(R.id.btn_confirm).setOnClickListener(v -> {
+            if (TextUtils.isEmpty(etIp.getText().toString())) {
+                ToastUtil.s("请输入IP地址");
+            } else if(TextUtils.isEmpty(etWg.getText().toString())){
+                ToastUtil.s("请输入网关地址");
+            } else {
+                new Thread(() -> {
+                    TcpUtil tcpUtil = new TcpUtil();
+                    tcpUtil.setStaticIp(etIp.getText().toString(),etWg.getText().toString());
+                }).start();
+                inputDialog.dismiss();
+                SPUtil.putString(STATIC_IP,etIp.getText().toString());
+                SPUtil.putString(WANG_GUAN_CODE,etWg.getText().toString());
+                ToastUtil.s("设置成功");
+
+            }
+        });
+        inputDialog.setOnShowListener(dialog -> {
+            etIp.requestFocus();
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.showSoftInput(etIp, InputMethodManager.SHOW_IMPLICIT);
+        });
+        etIp.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_NEXT ||
+                    (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
+                // 移动焦点到第二个输入框
+                etWg.requestFocus();
+                return true;
+            }
+            return false;
+        });
+
+        etWg.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE ||
                     (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
                 return true;
