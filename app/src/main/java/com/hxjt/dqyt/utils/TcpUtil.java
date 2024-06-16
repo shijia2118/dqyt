@@ -99,14 +99,14 @@ public class TcpUtil {
             throw new IllegalArgumentException("DeviceType and DeviceCode cannot be null");
         }
 
-        String dataType = (String) params.get("DataType");
-        if(dataType==null) dataType = "0";
+        Integer dataType = (Integer) params.get("DataType");
+        if(dataType==null) dataType = 0;
 
-        String pageIndex = (String) params.get("PageIndex");
-        String pageSize = (String) params.get("PageSize");
+        Integer pageIndex = (Integer) params.get("PageIndex");
+        Integer pageSize = (Integer) params.get("PageSize");
 
-        if(pageIndex==null) pageIndex = "1";
-        if(pageSize==null) pageSize = "10";
+        if(pageIndex==null) pageIndex = 1;
+        if(pageSize==null) pageSize = 10;
 
         String startDt = (String) params.get("StartDt");
         String endDt = (String) params.get("EndDt");

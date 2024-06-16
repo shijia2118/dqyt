@@ -112,17 +112,17 @@ public class DeviceUtil {
      */
     public static String[] getOperationButtonsByType(String deviceType){
         switch (deviceType){
-            case "wsdcgq":return new String[]{"修改名称","删除","遥测"};
+            case "wsdcgq":return new String[]{"修改名称","删除","遥测","历史数据"};
             case "zscgq":return new String[]{"修改名称","删除","遥测"};
             case "ywcgq":return new String[]{"修改名称","删除","遥测"};
             case "sjcgq":return new String[]{"修改名称","删除","遥测"};
-            case "bpq":return new String[]{"修改名称","删除","遥测","正转运行","反转运行","停机","频率设置"};
+            case "bpq":return new String[]{"修改名称","删除","遥测","正转运行","反转运行","停机","频率设置","历史数据"};
             case "dlq":return new String[]{"修改名称","删除","遥测"};
             case "clzscgq":return new String[]{"修改名称","删除","遥测"};
             case "zdjccgq":return new String[]{"修改名称","删除","遥测"};
-            case "ymcsy":return new String[]{"修改名称","删除","遥测"};
+            case "ymcsy":return new String[]{"修改名称","删除","遥测","历史数据"};
             case "sk645":return new String[]{"修改名称","删除","遥测","分闸","合闸"};
-            case "jcq":return new String[]{"修改名称","删除","读取"};
+            case "jcq":return new String[]{"修改名称","删除","读取","历史数据"};
             default:return new String[]{"修改名称","删除","遥测"};
         }
     }

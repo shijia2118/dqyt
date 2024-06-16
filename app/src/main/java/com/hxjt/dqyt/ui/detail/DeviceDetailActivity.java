@@ -23,6 +23,7 @@ import com.hxjt.dqyt.adapter.TextButtonAdapter;
 import com.hxjt.dqyt.app.Constants;
 import com.hxjt.dqyt.base.BaseActivity;
 import com.hxjt.dqyt.bean.DeviceInfoBean;
+import com.hxjt.dqyt.ui.system.SystemSetActivity;
 import com.hxjt.dqyt.ui.widget.MyCustomGridView;
 import com.hxjt.dqyt.utils.DeviceUtil;
 import com.hxjt.dqyt.utils.JsonUtil;
@@ -247,6 +248,10 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
 
                 }else if(buttonText.equals("频率设置")){
                     showPlszDialog();
+                }else if(buttonText.equals("历史数据")){
+                    Intent intent = new Intent(this, DeviceHistoryDataActivity.class);
+                    intent.putExtra("device_info_bean",deviceInfoBean);
+                    startActivity(intent);
                 }
             });
         }

@@ -132,15 +132,15 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
 //        map.put("chl",1);
 //        map.put("dev_type","bpq");
 //        map.put("addr","123");
-//        map.put("name","温湿度传感器");
+//        map.put("name","变频器");
 //        emptyView.setVisibility(View.GONE);
 //        DeviceInfoBean deviceInfoBean = DeviceInfoBean.fromMap(map);
 //        mDevices.add(deviceInfoBean);
 ////
 //        map.put("chl",1);
-//        map.put("dev_type","sk645");
+//        map.put("dev_type","ymcsy");
 //        map.put("addr","123");
-//        map.put("name","温湿度传感器");
+//        map.put("name","液面测试仪");
 //        emptyView.setVisibility(View.GONE);
 //        DeviceInfoBean deviceInfoBean2 = DeviceInfoBean.fromMap(map);
 //        mDevices.add(deviceInfoBean2);
