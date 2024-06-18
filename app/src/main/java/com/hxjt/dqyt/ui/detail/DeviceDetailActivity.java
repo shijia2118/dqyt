@@ -195,6 +195,7 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
         tvDeviceName = findViewById(R.id.tv_device_name);
         operationGridView = findViewById(R.id.grid_view);
         stateGridView = findViewById(R.id.state_grid_view);
+        stateGridView = findViewById(R.id.state_grid_view);
         ImageView ivImage = findViewById(R.id.iv_image);
         TextView tvDeviceType = findViewById(R.id.tv_device_type);
 
@@ -291,7 +292,7 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
             if(deviceInfoBean!=null && deviceInfoBean.getDev_type()!=null && deviceInfoBean.getDev_type().equals(SK645)){
                 String dlqType = SPUtil.getString(DLQ_TYPE,"sk");
                 if(dlqType.equals("lc")){
-                    operationButtonLabels = new String[]{"修改名称","删除","遥测"};
+                    operationButtonLabels = new String[]{"修改名称","删除","遥测","历史数据"};
                 }
             }
 
@@ -347,6 +348,10 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
 
                 }else if(buttonText.equals("频率设置")){
                     showPlszDialog();
+                }else if(buttonText.equals("历史数据")){
+                    Intent intent = new Intent(this, DeviceHistoryDataActivity.class);
+                    intent.putExtra("device_info_bean",deviceInfoBean);
+                    startActivity(intent);
                 }
             });
         }
@@ -446,13 +451,6 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
 
     private void sendMessage(String cmdType){
 
-//        if(!TcpClient.getInstance().isConnected()){
-//            ToastUtil.s("TCP未连接");
-//            orderToFalse();
-//            hideLoading();
-//            return;
-//        }
-
         if(handler != null){
             handler.removeCallbacksAndMessages(null);
         }
@@ -477,13 +475,6 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
 
 
     private void sendMessage(String cmdType,String payloadJson){
-
-//        if(!TcpClient.getInstance().isConnected()){
-//            ToastUtil.s("TCP未连接");
-//            orderToFalse();
-//            hideLoading();
-//            return;
-//        }
 
         if(handler != null){
             handler.removeCallbacksAndMessages(null);
@@ -532,14 +523,6 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
      * @param payloadJson :1正转运行 2反转运行 5停机
      */
     private void sendMessage_Bpq(String payloadJson){
-
-//        if(!TcpClient.getInstance().isConnected()){
-//            ToastUtil.s("TCP未连接");
-//            orderToFalse();
-//            hideLoading();
-//            return;
-//        }
-
         if(deviceInfoBean != null){
             Map<String,Object> map = new HashMap<>();
             map.put("DeviceType","bpq");

@@ -112,18 +112,18 @@ public class DeviceUtil {
      */
     public static String[] getOperationButtonsByType(String deviceType){
         switch (deviceType){
-            case "wsdcgq":return new String[]{"修改名称","删除","遥测"};
-            case "zscgq":return new String[]{"修改名称","删除","遥测"};
-            case "ywcgq":return new String[]{"修改名称","删除","遥测"};
-            case "sjcgq":return new String[]{"修改名称","删除","遥测"};
-            case "bpq":return new String[]{"修改名称","删除","遥测","正转运行","反转运行","停机","频率设置"};
-            case "dlq":return new String[]{"修改名称","删除","遥测"};
-            case "clzscgq":return new String[]{"修改名称","删除","遥测"};
-            case "zdjccgq":return new String[]{"修改名称","删除","遥测"};
-            case "ymcsy":return new String[]{"修改名称","删除","遥测"};
-            case "sk645":return new String[]{"修改名称","删除","遥测","分闸","合闸"};
-            case "jcq":return new String[]{"修改名称","删除","读取"};
-            default:return new String[]{"修改名称","删除","遥测"};
+            case "wsdcgq":return new String[]{"修改名称","删除","遥测","历史数据"};
+            case "zscgq":return new String[]{"修改名称","删除","遥测","历史数据"};
+            case "ywcgq":return new String[]{"修改名称","删除","遥测","历史数据"};
+            case "sjcgq":return new String[]{"修改名称","删除","遥测","历史数据"};
+            case "bpq":return new String[]{"修改名称","删除","遥测","正转运行","反转运行","停机","频率设置","历史数据"};
+            case "dlq":return new String[]{"修改名称","删除","遥测","历史数据"};
+            case "clzscgq":return new String[]{"修改名称","删除","遥测","历史数据"};
+            case "zdjccgq":return new String[]{"修改名称","删除","遥测","历史数据"};
+            case "ymcsy":return new String[]{"修改名称","删除","遥测","历史数据"};
+            case "sk645":return new String[]{"修改名称","删除","遥测","分闸","合闸","历史数据"};
+            case "jcq":return new String[]{"修改名称","删除","读取","历史数据"};
+            default:return new String[]{"修改名称","删除","遥测","历史数据"};
         }
     }
 
@@ -147,7 +147,7 @@ public class DeviceUtil {
                 wsdcgqArray[1].put("tag", "wd");
 
                 wsdcgqArray[2] = new HashMap<>();
-                wsdcgqArray[2].put("title", "湿度(°C)");
+                wsdcgqArray[2].put("title", "湿度(%)");
                 wsdcgqArray[2].put("resource_id", R.drawable.icon_shidu);
                 wsdcgqArray[2].put("tag", "sd");
                 return wsdcgqArray;
@@ -1001,6 +1001,108 @@ public class DeviceUtil {
         System.arraycopy(originalArray, 1, newArray, 0, originalArray.length - 1);
 
         return newArray;
+    }
+
+    /**
+     * 根据设备类型获取设备状态类型
+     * @param deviceType
+     * @return
+     */
+    public static List<String> getHistoryDataTitleByType(String deviceType){
+        List<String> result = new ArrayList<>();
+        result.add("序号");
+        switch (deviceType){
+            case "wsdcgq":
+                result.add("温度(°C)");
+                result.add("湿度(%)");
+                break;
+            case "ywcgq":
+                result.add("报警器状态");
+                result.add("报警延时");
+                break;
+            case "zdjccgq":
+                result.add("X轴振动速度");
+                result.add("Y轴振动速度");
+                result.add("Z轴振动速度");
+                result.add("X轴振动位移");
+                result.add("Y轴振动位移");
+                result.add("Z轴振动位移");
+                break;
+            case "zscgq":
+                result.add("噪声值");
+                break;
+            case "sjcgq":
+                result.add("水浸状态1");
+                result.add("水浸状态2");
+                break;
+            case "clzscgq":
+                result.add("IN1转速值");
+                result.add("IN2转速值");
+                break;
+            case "ymcsy":
+                result.add("单点套压(Mpa)");
+                result.add("单点声速(m/s)");
+                result.add("单点液面深度(m)");
+                break;
+            case "bpq":
+                result.add("运行频率");
+                result.add("设定频率");
+                result.add("运行转速");
+                result.add("输出电压");
+                result.add("输出电流");
+                result.add("输出功率");
+                break;
+            case "dlq":
+                break;
+            case "sk645":
+                result.add("瞬时有功功率(KW)");
+                result.add("瞬时无功功率(KW)");
+                result.add("功率因数");
+                result.add("总有功电能");
+                break;
+            case "jcq":
+                result.add("运行状态");
+                break;
+        }
+        result.add("创建时间");
+        result.add("操作");
+        return result;
+    }
+
+
+    public static String getHistoryDataKeyByTitle(String title){
+        switch (title){
+            case "温度(°C)":return "Wd";
+            case "湿度(%)":return "Sd";
+            case "运行频率":return "Yxpl";
+            case "设定频率":return "sdpl";
+            case "运行转速":return "yxzs";
+            case "输出电压":return "scdy";
+            case "输出电流":return "scdl";
+            case "输出功率":return "scgl";
+            case "单点套压(Mpa)":return "ddty";
+            case "单点声速(m/s)":return "ddsy";
+            case "单点液面深度(m)":return "ddymsd";
+            case "报警器状态": return "bjQstatus";
+            case "报警延时":return "bjDelayed";
+            case "X轴振动速度":return "vx";
+            case "Y轴振动速度":return "vy";
+            case "Z轴振动速度":return "vz";
+            case "X轴振动位移":return "dx";
+            case "Y轴振动位移":return "dy";
+            case "Z轴振动位移":return "dz";
+            case "噪声值":return "zSvalue";
+            case "水浸状态1":return "sjStatus1";
+            case "水浸状态2":return "sjStatus2";
+            case "IN1转速值":return "iN1Zsz";
+            case "IN2转速值":return "iN2Zsz";
+            case "瞬时有功功率(KW)":return "SsZongYouGongLv";
+            case "瞬时无功功率(KW)":return "zongwugonggonglv";
+            case "功率因数":return "zonggonglvyinshu";
+            case "总有功电能":return "ZongYgdn";
+            case "运行状态":return "Data";
+            default:return "";
+        }
     }
 
 

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:paddingHorizontal="@dimen/dp_50">
+
+    <include
+        android:id="@+id/rl_app_bar"
+        layout="@layout/layout_head" />
+
+    <LinearLayout
+        android:id="@+id/ll_time"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/rl_app_bar"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="起始时间"
+            android:textSize="@dimen/dp_10"
+            android:gravity="center_vertical"
+            android:layout_marginEnd="@dimen/dp_5"
+            android:textColor="@color/black"/>
+
+        <TextView
+            android:id="@+id/tv_start_time"
+            android:layout_width="@dimen/dp_110"
+            android:layout_height="match_parent"
+            android:paddingHorizontal="@dimen/dp_5"
+            android:textSize="@dimen/sp_10"
+            android:gravity="center_vertical"
+            android:layout_marginEnd="@dimen/dp_20"
+            android:hint="请选择时间"
+            android:background="@drawable/shape_input_rectangle" />
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="结束时间"
+            android:textSize="@dimen/dp_10"
+            android:gravity="center_vertical"
+            android:layout_marginEnd="@dimen/dp_5"
+            android:textColor="@color/black"/>
+
+        <TextView
+            android:id="@+id/tv_end_time"
+            android:layout_width="@dimen/dp_110"
+            android:layout_height="match_parent"
+            android:paddingHorizontal="@dimen/dp_5"
+            android:paddingVertical="@dimen/dp_5"
+            android:textSize="@dimen/sp_10"
+            android:hint="请选择时间"
+            android:gravity="center_vertical"
+            android:background="@drawable/shape_input_rectangle" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="数据类型"
+            android:textSize="@dimen/dp_10"
+            android:layout_marginStart="@dimen/dp_20"
+            android:gravity="center_vertical"
+            android:layout_marginEnd="@dimen/dp_5"
+            android:textColor="@color/black"/>
+
+        <Spinner
+            android:id="@+id/sp_type"
+            android:entries="@array/Spinner_history_data_type"
+            style="@style/Spinner_history_data_config" />
+
+    </LinearLayout>
+
+
+
+    <!-- 动态标题栏 -->
+    <LinearLayout
+        android:id="@+id/dynamic_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/ll_time"
+        android:layout_marginTop="@dimen/dp_10"
+        android:paddingVertical="@dimen/dp_5"
+        android:background="@color/grey"
+        android:orientation="horizontal" />
+
+    <com.scwang.smart.refresh.layout.SmartRefreshLayout
+        android:id="@+id/smartRefreshLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/dynamic_header">
+
+    <com.scwang.smart.refresh.header.ClassicsHeader
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    <com.scwang.smart.refresh.footer.ClassicsFooter
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    </com.scwang.smart.refresh.layout.SmartRefreshLayout>
+
+    <LinearLayout
+        android:id="@+id/empty_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/dynamic_header"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:visibility="gone"
+        android:orientation="vertical">
+
+        <ImageView
+            android:layout_width="@dimen/dp_58"
+            android:layout_height="@dimen/dp_65"
+            android:src="@drawable/empty_image" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/sp_10"
+            android:layout_marginTop="@dimen/dp_10"
+            android:text="暂无数据" />
+
+    </LinearLayout>
+
+</RelativeLayout>

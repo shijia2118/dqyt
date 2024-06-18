@@ -3,9 +3,12 @@ package com.hxjt.dqyt.utils;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
+import com.hxjt.dqyt.bean.HistoryDataBean;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -177,4 +180,22 @@ public class JsonUtil {
             return new HashMap<>();
         }
     }
+
+    /**
+     * 解析设备历史数据json字符串
+     * @param jsonString
+     * @return
+     */
+    public static List<HistoryDataBean> parseHistoryData(String jsonString) {
+        List<HistoryDataBean> historyDataList = new ArrayList<>();
+        try {
+            Gson gson = new Gson();
+            Type listType = new TypeToken<List<HistoryDataBean>>() {}.getType();
+            historyDataList = gson.fromJson(jsonString, listType);
+        } catch (JsonSyntaxException e) {
+            e.printStackTrace();
+        }
+        return historyDataList;
+    }
+
 }

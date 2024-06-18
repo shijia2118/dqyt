@@ -39,6 +39,15 @@ public class App extends BaseApplication {
         super.onCreate();
         initEasySocket();
 
+        String ip = SPUtil.getString(IP_ADDRESS,"");
+        String port = SPUtil.getString(PORT,"");
+        if(ip.isEmpty()){
+            SPUtil.putString(IP_ADDRESS,DEFAULT_IP_ADDRESS);
+        }
+        if(port.isEmpty()){
+            SPUtil.putString(PORT,DEFAULT_PORT);
+        }
+
         EasySocket.getInstance().subscribeSocketAction(iSocketActionListener);
     }
 
