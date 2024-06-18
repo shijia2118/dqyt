@@ -23,12 +23,6 @@ import com.hxjt.dqyt.ui.system.SystemSetActivity;
 import com.hxjt.dqyt.utils.JsonUtil;
 import com.hxjt.dqyt.utils.TcpClient;
 import com.hxjt.dqyt.utils.TcpUtil;
-import com.hxjt.dqyt.utils.ToastUtil;
-
-import org.w3c.dom.Text;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -130,20 +124,28 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
         /************************* mock ***********************/
 //        Map<String,Object> map = new HashMap<>();
 //        map.put("chl",1);
-//        map.put("dev_type","bpq");
+//        map.put("dev_type","clzscgq");
 //        map.put("addr","123");
 //        map.put("name","变频器");
 //        emptyView.setVisibility(View.GONE);
 //        DeviceInfoBean deviceInfoBean = DeviceInfoBean.fromMap(map);
 //        mDevices.add(deviceInfoBean);
-////
+//
 //        map.put("chl",1);
-//        map.put("dev_type","ymcsy");
+//        map.put("dev_type","sk645");
 //        map.put("addr","123");
 //        map.put("name","液面测试仪");
 //        emptyView.setVisibility(View.GONE);
 //        DeviceInfoBean deviceInfoBean2 = DeviceInfoBean.fromMap(map);
 //        mDevices.add(deviceInfoBean2);
+//
+//        map.put("chl",1);
+//        map.put("dev_type","jcq");
+//        map.put("addr","123");
+//        map.put("name","温湿度传感器");
+//        emptyView.setVisibility(View.GONE);
+//        DeviceInfoBean deviceInfoBean3 = DeviceInfoBean.fromMap(map);
+//        mDevices.add(deviceInfoBean3);
         /************************* mock ***********************/
 
         displayWithTcpStatus(TcpClient.getInstance().isConnected());
@@ -366,7 +368,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
                                     stringBuilder.append("/").append(sd);
                                 }
                                 mTimeValue = stringBuilder.toString();
-                            }  else if(deviceType.equals(Constants.BPQ)){
+                            } else if(deviceType.equals(Constants.BPQ)){
                                 mTimeValue = (String) map.get("Yxpl");
                             } else if(deviceType.equals(Constants.DLQ)){
                                 mTimeValue = (String) map.get("");

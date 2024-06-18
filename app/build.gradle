@@ -68,6 +68,9 @@ dependencies {
 
     implementation 'com.github.D10NGYANG:NetworkDebugAssistant:0.1.7'
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1"
+    implementation  'io.github.scwang90:refresh-layout-kernel:2.1.0'      //核心必须依赖
+    implementation  'io.github.scwang90:refresh-header-classics:2.1.0'    //经典刷新头
+    implementation 'com.github.gzu-liyujiang.AndroidPicker:WheelPicker:4.1.13'
 
 
 }

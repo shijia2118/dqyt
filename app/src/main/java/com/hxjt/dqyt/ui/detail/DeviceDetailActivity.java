@@ -192,7 +192,7 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
             if(deviceInfoBean!=null && deviceInfoBean.getDev_type()!=null && deviceInfoBean.getDev_type().equals(Constants.SK645)){
                 String dlqType = SPUtil.getString(Constants.DLQ_TYPE,"sk");
                 if(dlqType.equals("lc")){
-                    operationButtonLabels = new String[]{"修改名称","删除","遥测"};
+                    operationButtonLabels = new String[]{"修改名称","删除","遥测","历史数据"};
                 }
             }
 
