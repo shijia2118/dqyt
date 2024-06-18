@@ -61,7 +61,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
     private ImageView tcpStatusImg;
 
     private int currentPage = 1;
-    static private final int PAGESIZE = 9;
+    static private final int PAGESIZE = 8;
 
     private int dataType = 0;
     private String startDt;
@@ -122,7 +122,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
                 currentPage = 1;
                 showLoading("正在刷新...");
                 getDeviceHistoryDataList();
-                after3sHandle();
+                after8sHandle();
             }
 
             @Override
@@ -149,14 +149,14 @@ public class DeviceHistoryDataActivity extends BaseActivity {
             getDataType = GetDataType.REFRESH;
             currentPage = 1;
             getDeviceHistoryDataList();
-            after3sHandle();
+            after8sHandle();
         });
 
         smartRefreshLayout.setOnLoadMoreListener(refreshLayout -> {
             getDataType = GetDataType.LOADMORE;
             currentPage++;
             getDeviceHistoryDataList();
-            after3sHandle();
+            after8sHandle();
         });
 
         EventBus.getDefault().register(this);
@@ -265,7 +265,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
                 currentPage = 1;
                 showLoading("正在刷新...");
                 getDeviceHistoryDataList();
-                after3sHandle();
+                after8sHandle();
             } else if(timeType == 1){
                 boolean isAfter = TimeUtils.isAfter(startDt,text+".000");
                 if(!isAfter){
@@ -278,7 +278,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
                 currentPage = 1;
                 showLoading("正在刷新...");
                 getDeviceHistoryDataList();
-                after3sHandle();
+                after8sHandle();
             } else {
                 throw new IllegalArgumentException("Invalid timeType: " + timeType);
             }
@@ -317,7 +317,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
     /**
      * 3s后停止
      */
-    private void after3sHandle(){
+    private void after8sHandle(){
         handler = new Handler();
         handler.postDelayed(() -> {
             if(handler != null){
@@ -332,7 +332,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
             } else if(getDataType == GetDataType.LOADMORE) {
                 smartRefreshLayout.finishLoadMore(false);
             }
-        }, 3000);
+        }, 5000);
     }
 
     @Subscriber(tag = RECEIVED_MESSAGE)

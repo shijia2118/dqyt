@@ -4,6 +4,7 @@ import com.easysocket.EasySocket;
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.hxjt.dqyt.bean.DeviceInfoBean;
 
 import java.nio.charset.StandardCharsets;
@@ -119,12 +120,14 @@ public class TcpUtil {
         payloadMap.put("PageSize",pageSize);
         payloadMap.put("StartDt",startDt);
         payloadMap.put("EndDt",endDt);
-        Gson gson = new Gson();
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.serializeNulls();
+        Gson gson = gsonBuilder.create();
         String payloadJson = gson.toJson(payloadMap);
 
         Map<String,Object> map = new HashMap<>();
         map.put("DeviceType",deviceType);
-        map.put("DeviceCode",deviceCode);
+        map.put("DeviceCode",null);
         map.put("CmdType","104");
         map.put("PayloadJson",payloadJson);
 

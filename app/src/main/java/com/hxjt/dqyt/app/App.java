@@ -13,6 +13,7 @@ import android.util.Log;
 import androidx.multidex.MultiDex;
 
 import com.easysocket.EasySocket;
+import com.easysocket.config.DefaultMessageProtocol;
 import com.easysocket.config.EasySocketOptions;
 import com.easysocket.entity.OriginReadData;
 import com.easysocket.entity.SocketAddress;
@@ -38,16 +39,6 @@ public class App extends BaseApplication {
     public void onCreate() {
         super.onCreate();
         initEasySocket();
-
-        String ip = SPUtil.getString(IP_ADDRESS,"");
-        String port = SPUtil.getString(PORT,"");
-        if(ip.isEmpty()){
-            SPUtil.putString(IP_ADDRESS,DEFAULT_IP_ADDRESS);
-        }
-        if(port.isEmpty()){
-            SPUtil.putString(PORT,DEFAULT_PORT);
-        }
-
         EasySocket.getInstance().subscribeSocketAction(iSocketActionListener);
     }
 
@@ -70,7 +61,8 @@ public class App extends BaseApplication {
         // socket配置
         EasySocketOptions options = new EasySocketOptions.Builder()
                 .setSocketAddress(new SocketAddress(ip,Integer.parseInt(port)))
-                .setMaxReadBytes(1024*50)
+                .setMaxReadBytes(1024*1024*50)
+                .setMaxWriteBytes(1024*30)
                 .build();
 
         // 初始化
