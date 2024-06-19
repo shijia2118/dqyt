@@ -120,7 +120,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
                 currentPage = 1;
                 showLoading("正在刷新...");
                 getDeviceHistoryDataList();
-                after3sHandle();
+                after8sHandle();
             }
 
             @Override
@@ -147,16 +147,17 @@ public class DeviceHistoryDataActivity extends BaseActivity {
             getDataType = GetDataType.REFRESH;
             currentPage = 1;
             getDeviceHistoryDataList();
-            after3sHandle();
+            after8sHandle();
         });
 
         smartRefreshLayout.setOnLoadMoreListener(refreshLayout -> {
             getDataType = GetDataType.LOADMORE;
             currentPage++;
             getDeviceHistoryDataList();
-            after3sHandle();
+            after8sHandle();
         });
 
+        displayWithTcpStatus(TcpClient.getInstance().isConnected());
     }
 
     private void initTableHeader(){
@@ -170,15 +171,15 @@ public class DeviceHistoryDataActivity extends BaseActivity {
                     0, LinearLayout.LayoutParams.WRAP_CONTENT, 1);
             if(header.equals("序号")){
                 params = new LinearLayout.LayoutParams(
-                        getResources().getDimensionPixelSize(R.dimen.dp_20),
+                        getResources().getDimensionPixelSize(R.dimen.dp_30),
                         LinearLayout.LayoutParams.WRAP_CONTENT);
             } else if(header.equals("创建时间")) {
                 params = new LinearLayout.LayoutParams(
-                        getResources().getDimensionPixelSize(R.dimen.dp_60),
+                        getResources().getDimensionPixelSize(R.dimen.dp_80),
                         LinearLayout.LayoutParams.WRAP_CONTENT);
             } else if(header.equals("操作")) {
                 params = new LinearLayout.LayoutParams(
-                        getResources().getDimensionPixelSize(R.dimen.dp_35),
+                        getResources().getDimensionPixelSize(R.dimen.dp_50),
                         LinearLayout.LayoutParams.WRAP_CONTENT);
             }
             textView.setLayoutParams(params);
@@ -249,7 +250,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
                 currentPage = 1;
                 showLoading("正在刷新...");
                 getDeviceHistoryDataList();
-                after3sHandle();
+                after8sHandle();
             } else if(timeType == 1){
                 boolean isAfter = TimeUtils.isAfter(startDt,text+".000");
                 if(!isAfter){
@@ -262,7 +263,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
                 currentPage = 1;
                 showLoading("正在刷新...");
                 getDeviceHistoryDataList();
-                after3sHandle();
+                after8sHandle();
             } else {
                 throw new IllegalArgumentException("Invalid timeType: " + timeType);
             }
@@ -301,7 +302,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
     /**
      * 3s后停止
      */
-    private void after3sHandle(){
+    private void after8sHandle(){
         handler = new Handler();
         handler.postDelayed(() -> {
             if(handler != null){
@@ -316,7 +317,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
             } else if(getDataType == GetDataType.LOADMORE) {
                 smartRefreshLayout.finishLoadMore(false);
             }
-        }, 3000);
+        }, 8000);
     }
 
     /**

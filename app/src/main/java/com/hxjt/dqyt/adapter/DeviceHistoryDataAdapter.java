@@ -20,6 +20,7 @@ import com.lxj.xpopup.XPopup;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class DeviceHistoryDataAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -45,12 +46,12 @@ public class DeviceHistoryDataAdapter extends RecyclerView.Adapter<RecyclerView.
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         HistoryDataBean data = dataList.get(position);
         Map<String,Object> map = JsonUtil.toMap(data.getDeviceData());
-        ((ItemViewHolder) holder).bind(map, headers,position);
+        ((ItemViewHolder) holder).bind(data,map, headers,position);
     }
 
     @Override
     public int getItemCount() {
-        return dataList.size(); // Include header
+        return dataList.size();
     }
 
     // 添加一个更新数据的方法
@@ -67,7 +68,7 @@ public class DeviceHistoryDataAdapter extends RecyclerView.Adapter<RecyclerView.
             itemContainer = itemView.findViewById(R.id.item_container);
         }
 
-        public void bind(Map<String, Object> data, List<String> headers,int position) {
+        public void bind(HistoryDataBean historyDataBean,Map<String, Object> data, List<String> headers,int position) {
             itemContainer.removeAllViews();
             for (String header : headers) {
                 TextView textView = new TextView(itemView.getContext());
@@ -76,19 +77,19 @@ public class DeviceHistoryDataAdapter extends RecyclerView.Adapter<RecyclerView.
                 textView.setGravity(Gravity.CENTER);
                 String text = "";
                 if(header.equals("序号")){
-                    text = "" + position + 1;
+                    text = "" + (position + 1);
                     textView.setLayoutParams(new LinearLayout.LayoutParams(
-                            mContext.getResources().getDimensionPixelSize(R.dimen.dp_20),
+                            mContext.getResources().getDimensionPixelSize(R.dimen.dp_30),
                             LinearLayout.LayoutParams.WRAP_CONTENT));
                 } else if(header.equals("创建时间")){
-                    text = (String) data.get("CreateTimeStr");
+                    text = historyDataBean.getCreateTimeStr();
                     textView.setLayoutParams(new LinearLayout.LayoutParams(
-                            mContext.getResources().getDimensionPixelSize(R.dimen.dp_60),
+                            mContext.getResources().getDimensionPixelSize(R.dimen.dp_80),
                             LinearLayout.LayoutParams.WRAP_CONTENT));
                 } else if(header.equals("操作")) {
                     text = "查看详情";
                     textView.setLayoutParams(new LinearLayout.LayoutParams(
-                            mContext.getResources().getDimensionPixelSize(R.dimen.dp_35),
+                            mContext.getResources().getDimensionPixelSize(R.dimen.dp_50),
                             LinearLayout.LayoutParams.WRAP_CONTENT));
                     textView.setTextColor(ContextCompat.getColor(itemView.getContext(),R.color.button));
                     textView.setOnClickListener(v -> new XPopup.Builder(mContext).asConfirm(
@@ -100,7 +101,19 @@ public class DeviceHistoryDataAdapter extends RecyclerView.Adapter<RecyclerView.
                             null,
                             true).show());
                 } else {
-                    text = (String) data.get(DeviceUtil.getHistoryDataKeyByTitle(header));
+                    String title = DeviceUtil.getHistoryDataKeyByTitle(header);
+                    String value = (String) data.get(title);
+                    if(title.equals("SjStatus1") || title.equals("SjStatus2")){
+                        if(Objects.equals(value, "0")){
+                            if(value.equals("0")){
+                                text = "正常";
+                            } else if(value.equals("1")){
+                                text = "有水";
+                            }
+                        }
+                    } else {
+                        text = value;
+                    }
                 }
                 textView.setText(text);
                 itemContainer.addView(textView);

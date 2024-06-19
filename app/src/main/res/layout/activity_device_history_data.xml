@@ -75,8 +75,6 @@
 
     </LinearLayout>
 
-
-
     <!-- 动态标题栏 -->
     <LinearLayout
         android:id="@+id/dynamic_header"

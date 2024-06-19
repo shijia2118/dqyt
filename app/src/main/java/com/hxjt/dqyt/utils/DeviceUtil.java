@@ -1055,9 +1055,12 @@ public class DeviceUtil {
             case "dlq":
                 break;
             case "sk645":
-                result.add("瞬时有功功率(KW)");
-                result.add("瞬时无功功率(KW)");
-                result.add("功率因数");
+                result.add("A相电压(V)");
+                result.add("B相电压(V)");
+                result.add("C相电压(V)");
+                result.add("A相电流(A)");
+                result.add("B相电流(A)");
+                result.add("C相电流(A)");
                 result.add("总有功电能");
                 break;
             case "jcq":
@@ -1101,6 +1104,12 @@ public class DeviceUtil {
             case "功率因数":return "Zonggonglvyinshu";
             case "总有功电能":return "ZongYgdn";
             case "运行状态":return "Data";
+            case "A相电压(V)":return "DqAxiangDianYa";
+            case "B相电压(V)":return "DqBxiangDianYa";
+            case "C相电压(V)":return "DqCxiangDianYa";
+            case "A相电流(A)":return "DqAxiangDianLiu";
+            case "B相电流(A)":return "DqBxiangDianLiu";
+            case "C相电流(A)":return "DqCxiangDianLiu";
             default:return "";
         }
     }
