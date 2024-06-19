@@ -61,6 +61,8 @@ public class App extends BaseApplication {
         // socket配置
         EasySocketOptions options = new EasySocketOptions.Builder()
                 .setSocketAddress(new SocketAddress(ip,Integer.parseInt(port)))
+                .setMaxReadBytes(1024*1024*10)
+                .setMaxWriteBytes(1024*1024*10)
                 .build();
 
         // 初始化
@@ -99,7 +101,6 @@ public class App extends BaseApplication {
         public void onSocketResponse(SocketAddress socketAddress, byte[] readData) {
             super.onSocketResponse(socketAddress, readData);
             String str = new String(readData);
-            Log.d("收到数据------------->",str);
             EventBus.getDefault().post(str, RECEIVED_MESSAGE);
         }
 
