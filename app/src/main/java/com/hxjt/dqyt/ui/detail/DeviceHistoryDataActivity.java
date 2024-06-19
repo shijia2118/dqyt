@@ -35,8 +35,6 @@ import com.hxjt.dqyt.base.BasePresenter;
 import com.hxjt.dqyt.bean.DeviceInfoBean;
 import com.hxjt.dqyt.bean.GetDataType;
 import com.hxjt.dqyt.bean.HistoryDataBean;
-import com.hxjt.dqyt.utils.DatabaseManager;
-import com.hxjt.dqyt.utils.DbUtils;
 import com.hxjt.dqyt.utils.DeviceUtil;
 import com.hxjt.dqyt.utils.JsonUtil;
 import com.hxjt.dqyt.utils.TcpUtil;
@@ -289,21 +287,19 @@ public class DeviceHistoryDataActivity extends BaseActivity {
      * 下发指令，获取历史数据
      */
     private void getDeviceHistoryDataList(){
-//        if(deviceInfoBean != null){
-//            Map<String,Object> map = new HashMap<>();
-//            map.put("DeviceType",deviceInfoBean.getDev_type());
-//            map.put("DeviceCode",deviceInfoBean.getAddr());
-//            map.put("DataType",dataType);
-//            map.put("PageIndex",currentPage);
-//            map.put("PageSize",PAGESIZE);
-//            map.put("StartDt",startDt);
-//            map.put("EndDt",endDt);
-//
-//            TcpUtil tcpUtil = new TcpUtil();
-//            tcpUtil.getDeviceHistoryDataList(map);
-//        }
+        if(deviceInfoBean != null){
+            Map<String,Object> map = new HashMap<>();
+            map.put("DeviceType",deviceInfoBean.getDev_type());
+            map.put("DeviceCode",deviceInfoBean.getAddr());
+            map.put("DataType",dataType);
+            map.put("PageIndex",currentPage);
+            map.put("PageSize",PAGESIZE);
+            map.put("StartDt",startDt);
+            map.put("EndDt",endDt);
 
-
+            TcpUtil tcpUtil = new TcpUtil();
+            tcpUtil.getDeviceHistoryDataList(map);
+        }
     }
 
     private void  displayWithTcpStatus(boolean isConnected) {
