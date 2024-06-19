@@ -120,6 +120,7 @@ public class TcpUtil {
         payloadMap.put("PageSize",pageSize);
         payloadMap.put("StartDt",startDt);
         payloadMap.put("EndDt",endDt);
+
         GsonBuilder gsonBuilder = new GsonBuilder();
         gsonBuilder.serializeNulls();
         Gson gson = gsonBuilder.create();
