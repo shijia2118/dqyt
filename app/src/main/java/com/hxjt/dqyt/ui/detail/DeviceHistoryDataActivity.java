@@ -61,7 +61,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
     private ImageView tcpStatusImg;
 
     private int currentPage = 1;
-    static private final int PAGESIZE = 8;
+    static private final int PAGESIZE = 20;
 
     private int dataType = 0;
     private String startDt;
