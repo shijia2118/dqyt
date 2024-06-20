@@ -66,11 +66,13 @@
             android:layout_marginStart="@dimen/dp_20"
             android:gravity="center_vertical"
             android:layout_marginEnd="@dimen/dp_5"
+            android:visibility="gone"
             android:textColor="@color/black"/>
 
         <Spinner
             android:id="@+id/sp_type"
             android:entries="@array/Spinner_history_data_type"
+            android:visibility="gone"
             style="@style/Spinner_history_data_config" />
 
     </LinearLayout>

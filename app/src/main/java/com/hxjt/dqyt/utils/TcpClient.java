@@ -85,7 +85,7 @@ public class TcpClient {
     private void messageReceiver() {
         Handler handler = new Handler(Looper.getMainLooper());
         StringBuilder buffer = new StringBuilder();
-        char[] charBuffer = new char[1024*30];
+        char[] charBuffer = new char[1024*500];
         if(reader == null) return;
 
         try {

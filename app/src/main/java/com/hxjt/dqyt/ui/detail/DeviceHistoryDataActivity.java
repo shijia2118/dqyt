@@ -57,7 +57,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
     private int currentPage = 1;
     static private final int PAGESIZE = 20;
 
-    private int dataType = 0;
+    private int dataType = 1;
     private String startDt;
     private String endDt;
     private int getDataType;
@@ -158,6 +158,12 @@ public class DeviceHistoryDataActivity extends BaseActivity {
         });
 
         displayWithTcpStatus(TcpClient.getInstance().isConnected());
+
+        getDataType = GetDataType.GETDATA;
+        currentPage = 1;
+        showLoading("正在刷新...");
+        getDeviceHistoryDataList();
+        after8sHandle();
     }
 
     private void initTableHeader(){
