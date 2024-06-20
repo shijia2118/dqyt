@@ -92,21 +92,21 @@ public class DBUtils extends SQLiteOpenHelper {
 
         Cursor cursor = db.query(TABLE_NAME, null, null, null, null, null, null, limitClause);
 
-        while (cursor.moveToNext()) {
+//        while (cursor.moveToNext()) {
             // 获取每一列的数据
-            String id = cursor.getString(cursor.getColumnIndex(COLUMN_ID));
-            String deviceType = cursor.getString(cursor.getColumnIndex(COLUMN_DEVICE_TYPE));
-            String deviceData = cursor.getString(cursor.getColumnIndex(COLUMN_DEVICE_DATA));
-            int dataType = cursor.getInt(cursor.getColumnIndex(COLUMN_DATA_TYPE));
-            String createTimeStr = cursor.getString(cursor.getColumnIndex(COLUMN_CREATE_TIME_STR));
-            String createTime = cursor.getString(cursor.getColumnIndex(COLUMN_CREATE_TIME));
-
-            // 构造 HistoryDataBean 对象并添加到列表中
-            HistoryDataBean historyDataBean = new HistoryDataBean(id, deviceType, deviceData, dataType, createTimeStr, createTime);
-            list.add(historyDataBean);
-
-            Log.d(TAG, "selectData: Retrieved - " + historyDataBean.toString());
-        }
+//            String id = cursor.getString(cursor.getColumnIndex(COLUMN_ID));
+//            String deviceType = cursor.getString(cursor.getColumnIndex(COLUMN_DEVICE_TYPE));
+//            String deviceData = cursor.getString(cursor.getColumnIndex(COLUMN_DEVICE_DATA));
+//            int dataType = cursor.getInt(cursor.getColumnIndex(COLUMN_DATA_TYPE));
+//            String createTimeStr = cursor.getString(cursor.getColumnIndex(COLUMN_CREATE_TIME_STR));
+//            String createTime = cursor.getString(cursor.getColumnIndex(COLUMN_CREATE_TIME));
+//
+//            // 构造 HistoryDataBean 对象并添加到列表中
+//            HistoryDataBean historyDataBean = new HistoryDataBean(id, deviceType, deviceData, dataType, createTimeStr, createTime);
+//            list.add(historyDataBean);
+//
+//            Log.d(TAG, "selectData: Retrieved - " + historyDataBean.toString());
+//        }
 
         cursor.close();
 

@@ -105,13 +105,21 @@ public class DeviceHistoryDataAdapter extends RecyclerView.Adapter<RecyclerView.
                     String value = (String) data.get(title);
                     if(title.equals("SjStatus1") || title.equals("SjStatus2")){
                         if(Objects.equals(value, "0")){
-                            if(value.equals("0")){
-                                text = "正常";
-                            } else if(value.equals("1")){
-                                text = "有水";
-                            }
+                            text = "正常";
+                        } else {
+                            text = "有水";
                         }
-                    } else {
+                    } else if(title.equals("BJQstatus")){
+                        if(Objects.equals(value, "0")){
+                            text = "正常";
+                        } else {
+                            text = "报警";                        }
+                    }  else if(title.equals("data")){
+                        if(Objects.equals(value, "1")){
+                            text = "断开";
+                        } else {
+                            text = "运行";                        }
+                    }else {
                         text = value;
                     }
                 }
