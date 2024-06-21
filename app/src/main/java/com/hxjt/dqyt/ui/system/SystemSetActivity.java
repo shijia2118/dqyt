@@ -201,17 +201,7 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
         if(tvTcpSwitch.getText().equals("开启")){
             isOpenTcp = true;
             showLoading("正在开启...");
-
-            String ip = SPUtil.getString(IP_ADDRESS,"");
-            String port = SPUtil.getString(PORT,"");
-
-            EasySocket.getInstance().destroyConnection();
-//            EasySocketOptions options = new EasySocketOptions.Builder()
-//                    .setSocketAddress(new SocketAddress(ip,Integer.parseInt(port)))
-//                    .setMaxReadBytes(1024*50)
-//                    .build();
-//            EasySocket.getInstance()
-//                    .createConnection(options, this);
+            EasySocket.getInstance().connect();
         } else {
             showLoading("正在关闭...");
             isCloseTcp = true;
