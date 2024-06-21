@@ -1,7 +1,6 @@
 package com.hxjt.dqyt.ui.detail;
 
 import static com.hxjt.dqyt.app.Constants.CONNECTION_CHANGED;
-import static com.hxjt.dqyt.app.Constants.RECEIVED_MESSAGE;
 import static com.hxjt.dqyt.utils.TimeUtils.formatWithLeadingZero;
 import static com.hxjt.dqyt.utils.TimeUtils.getDateTimeEntity;
 
@@ -13,6 +12,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
@@ -35,9 +35,8 @@ import com.hxjt.dqyt.base.BasePresenter;
 import com.hxjt.dqyt.bean.DeviceInfoBean;
 import com.hxjt.dqyt.bean.GetDataType;
 import com.hxjt.dqyt.bean.HistoryDataBean;
+import com.hxjt.dqyt.utils.DBUtils;
 import com.hxjt.dqyt.utils.DeviceUtil;
-import com.hxjt.dqyt.utils.JsonUtil;
-import com.hxjt.dqyt.utils.TcpUtil;
 import com.hxjt.dqyt.utils.TimeUtils;
 import com.hxjt.dqyt.utils.ToastUtil;
 import com.scwang.smart.refresh.layout.SmartRefreshLayout;
@@ -47,9 +46,7 @@ import org.simple.eventbus.Subscriber;
 
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class DeviceHistoryDataActivity extends BaseActivity {
 
@@ -59,6 +56,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
     private Handler handler;
 
     private ImageView tcpStatusImg;
+    private Button backToTop;
 
     private int currentPage = 1;
     static private final int PAGESIZE = 20;
@@ -103,6 +101,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
         tv_start_time = findViewById(R.id.tv_start_time);
         tv_end_time = findViewById(R.id.tv_end_time);
         Spinner spinner = findViewById(R.id.sp_type);
+        backToTop = findViewById(R.id.iv_back_to_top);
 
         llBack.setOnClickListener(v -> finish());
 
@@ -113,6 +112,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
 
         tv_start_time.setOnClickListener(onStartClickListener);
         tv_end_time.setOnClickListener(onEndClickListener);
+        backToTop.setOnClickListener(onBackToTop);
 
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -121,8 +121,8 @@ public class DeviceHistoryDataActivity extends BaseActivity {
                 getDataType = GetDataType.GETDATA;
                 currentPage = 1;
                 showLoading("正在刷新...");
+                after3sHandle();
                 getDeviceHistoryDataList();
-                after8sHandle();
             }
 
             @Override
@@ -148,15 +148,15 @@ public class DeviceHistoryDataActivity extends BaseActivity {
         smartRefreshLayout.setOnRefreshListener(refreshLayout -> {
             getDataType = GetDataType.REFRESH;
             currentPage = 1;
+            after3sHandle();
             getDeviceHistoryDataList();
-            after8sHandle();
         });
 
         smartRefreshLayout.setOnLoadMoreListener(refreshLayout -> {
             getDataType = GetDataType.LOADMORE;
             currentPage++;
+            after3sHandle();
             getDeviceHistoryDataList();
-            after8sHandle();
         });
 
         EventBus.getDefault().register(this);
@@ -172,8 +172,8 @@ public class DeviceHistoryDataActivity extends BaseActivity {
         getDataType = GetDataType.GETDATA;
         currentPage = 1;
         showLoading("正在刷新...");
+        after3sHandle();
         getDeviceHistoryDataList();
-        after8sHandle();
     }
 
     private void initTableHeader(){
@@ -224,6 +224,10 @@ public class DeviceHistoryDataActivity extends BaseActivity {
         }
     };
 
+    final View.OnClickListener onBackToTop = v -> {
+        recyclerView.scrollToPosition(0);
+    };
+
     /**
      * 日期选择器
      * @param timeType :0-开始时间 1-结束时间
@@ -265,8 +269,8 @@ public class DeviceHistoryDataActivity extends BaseActivity {
                 getDataType = GetDataType.GETDATA;
                 currentPage = 1;
                 showLoading("正在刷新...");
+                after3sHandle();
                 getDeviceHistoryDataList();
-                after8sHandle();
             } else if(timeType == 1){
                 boolean isAfter = TimeUtils.isAfter(startDt,text+".000");
                 if(!isAfter){
@@ -278,8 +282,8 @@ public class DeviceHistoryDataActivity extends BaseActivity {
                 getDataType = GetDataType.GETDATA;
                 currentPage = 1;
                 showLoading("正在刷新...");
+                after3sHandle();
                 getDeviceHistoryDataList();
-                after8sHandle();
             } else {
                 throw new IllegalArgumentException("Invalid timeType: " + timeType);
             }
@@ -291,63 +295,16 @@ public class DeviceHistoryDataActivity extends BaseActivity {
     /**
      * 下发指令，获取历史数据
      */
-    private void getDeviceHistoryDataList(){
-        if(deviceInfoBean != null){
-            Map<String,Object> map = new HashMap<>();
-            map.put("DeviceType",deviceInfoBean.getDev_type());
-            map.put("DeviceCode",deviceInfoBean.getAddr());
-            map.put("DataType",dataType);
-            map.put("PageIndex",currentPage);
-            map.put("PageSize",PAGESIZE);
-            map.put("StartDt",startDt);
-            map.put("EndDt",endDt);
+    private void getDeviceHistoryDataList() {
+        String deviceType = deviceInfoBean.getDev_type();
+        if(TextUtils.isEmpty(deviceType)) return;
 
-            TcpUtil tcpUtil = new TcpUtil();
-            tcpUtil.getDeviceHistoryDataList(map);
-        }
-    }
-
-    private void  displayWithTcpStatus(boolean isConnected) {
-        if(isConnected){
-            tcpStatusImg.setImageResource(R.drawable.icon_connect);
-        } else {
-            tcpStatusImg.setImageResource(R.drawable.icon_disconnect);
-        }
-    }
-
-    /**
-     * 3s后停止
-     */
-    private void after8sHandle(){
-        handler = new Handler();
-        handler.postDelayed(() -> {
-            if(handler != null){
-                handler.removeCallbacksAndMessages(null);
-            }
-            if(getDataType == GetDataType.GETDATA){
-                hideLoading();
-                recyclerView.setVisibility(View.GONE);
-                emptyView.setVisibility(View.VISIBLE);
-            } else if(getDataType == GetDataType.REFRESH){
-                smartRefreshLayout.finishRefresh(false);
-            } else if(getDataType == GetDataType.LOADMORE) {
-                smartRefreshLayout.finishLoadMore(false);
-            }
-        }, 5000);
-    }
-
-    @Subscriber(tag = RECEIVED_MESSAGE)
-    public void onReceivedMessage(String data){
-        if(TextUtils.isEmpty(data)) return;
-        if(!data.startsWith("[")) return;
-
-        hideLoading();
+        List<HistoryDataBean> result = DBUtils.query(currentPage,PAGESIZE,startDt,endDt,deviceType);
 
         if(handler != null){
             handler.removeCallbacksAndMessages(null);
         }
-
-        List<HistoryDataBean> result = JsonUtil.parseHistoryData(data);
+        hideLoading();
 
         if(getDataType == GetDataType.GETDATA){
             dataList.clear();
@@ -381,8 +338,35 @@ public class DeviceHistoryDataActivity extends BaseActivity {
             dataList.addAll(result);
             adapter.updateData(dataList);
         }
+    }
 
+    private void  displayWithTcpStatus(boolean isConnected) {
+        if(isConnected){
+            tcpStatusImg.setImageResource(R.drawable.icon_connect);
+        } else {
+            tcpStatusImg.setImageResource(R.drawable.icon_disconnect);
+        }
+    }
 
+    /**
+     * 3s后停止
+     */
+    private void after3sHandle(){
+        handler = new Handler();
+        handler.postDelayed(() -> {
+            if(handler != null){
+                handler.removeCallbacksAndMessages(null);
+            }
+            if(getDataType == GetDataType.GETDATA){
+                hideLoading();
+                recyclerView.setVisibility(View.GONE);
+                emptyView.setVisibility(View.VISIBLE);
+            } else if(getDataType == GetDataType.REFRESH){
+                smartRefreshLayout.finishRefresh(false);
+            } else if(getDataType == GetDataType.LOADMORE) {
+                smartRefreshLayout.finishLoadMore(false);
+            }
+        }, 3000);
     }
 
     @Override

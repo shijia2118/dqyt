@@ -24,6 +24,7 @@ import com.hxjt.dqyt.base.BaseActivity;
 import com.hxjt.dqyt.bean.DeviceInfoBean;
 import com.hxjt.dqyt.bean.DeviceInfoListBean;
 import com.hxjt.dqyt.ui.system.SystemSetActivity;
+import com.hxjt.dqyt.utils.DBUtils;
 import com.hxjt.dqyt.utils.JsonUtil;
 import com.hxjt.dqyt.utils.TcpUtil;
 import com.hxjt.dqyt.utils.ToastUtil;
@@ -33,6 +34,7 @@ import org.simple.eventbus.Subscriber;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
 
 public class MainActivity extends BaseActivity<MainPresenter> implements MainView{
 
@@ -46,6 +48,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
 
     private GridView gridView;
     private final List<DeviceInfoBean> mDevices = new ArrayList<>();
+
 
     @Override
     protected MainPresenter createPresenter() {
@@ -133,6 +136,13 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
 //        emptyView.setVisibility(View.GONE);
 //        DeviceInfoBean deviceInfoBean3 = DeviceInfoBean.fromMap(map);
 //        mDevices.add(deviceInfoBean3);
+
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                DBUtils.testInsert();
+//            }
+//        }).start();
         /************************* mock ***********************/
 
 

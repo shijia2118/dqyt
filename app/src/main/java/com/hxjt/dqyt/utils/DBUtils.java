@@ -1,158 +1,198 @@
 package com.hxjt.dqyt.utils;
 
-import android.content.ContentValues;
-import android.content.Context;
-import android.content.res.AssetManager;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.hxjt.dqyt.app.App;
 import com.hxjt.dqyt.bean.HistoryDataBean;
+import com.hxjt.dqyt.bean.HistoryDataBean_;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
-public class DBUtils extends SQLiteOpenHelper {
-    private static final String TAG = "DBUtils";
+import io.objectbox.Box;
+import io.objectbox.BoxStore;
+import io.objectbox.query.Query;
+import io.objectbox.query.QueryBuilder;
 
-    // 数据库名称和版本
-    private static final String DATABASE_NAME = "hspc.db";
-    private static final int DATABASE_VERSION = 1;
+public class DBUtils {
 
-    private SQLiteDatabase db;
-    private Context context;
+    /**
+     * 插入实时值
+     * @param json
+     */
+    public static void insert(String json) {
 
-    // 表名和字段名
-    private static final String TABLE_NAME = "history_data";
-    private static final String COLUMN_ID = "Id";
-    private static final String COLUMN_DEVICE_TYPE = "DeviceType";
-    private static final String COLUMN_DEVICE_DATA = "DeviceData";
-    private static final String COLUMN_DATA_TYPE = "DataType";
-    private static final String COLUMN_CREATE_TIME_STR = "CreateTimeStr";
-    private static final String COLUMN_CREATE_TIME = "CreateTime";
+        BoxStore mBoxStore = App.getBoxStore();
+        if(mBoxStore == null) return;
 
-    public DBUtils(Context context) {
-        super(context, DATABASE_NAME, null, DATABASE_VERSION);
-        this.context = context;
-        // 在构造函数中复制数据库文件到应用程序的数据目录
-        copyDatabaseFromAssets();
-        // 打开数据库连接
-        db = getWritableDatabase();
-    }
+        Map<String,Object> map = JsonUtil.toMap(json);
+        if(map != null && !map.isEmpty()){
+            String msgType = (String) map.get("MsgType");
+            if(msgType != null && msgType.equals("1")){
 
-    // 复制数据库文件从 assets 到应用程序的数据目录
-    private void copyDatabaseFromAssets() {
-        File dbFile = context.getDatabasePath(DATABASE_NAME);
-        if (!dbFile.exists()) {
-            try {
-                AssetManager assetManager = context.getAssets();
-                InputStream inputStream = assetManager.open(DATABASE_NAME);
-                OutputStream outputStream = new FileOutputStream(dbFile);
+                String inertTime = (String) map.get("CreateTimeStr");
+                Log.d("当前插入的数据时间:",inertTime + "");
 
-                byte[] buffer = new byte[1024];
-                int length;
-                while ((length = inputStream.read(buffer)) > 0) {
-                    outputStream.write(buffer, 0, length);
+                Double doubleId = (Double) map.get("Id");
+
+                if(doubleId == null) return;
+
+                Box<HistoryDataBean> historyDataBeanBox = mBoxStore.boxFor(HistoryDataBean.class);
+
+                long id = doubleId.longValue();
+
+                String deviceType = (String) map.get("DeviceType");
+                String deviceData = (String) map.get("DeviceData");
+                Double doubleDataType = (Double) map.get("DataType");
+                String createTimeStr = (String) map.get("CreateTimeStr");
+                String createTime = (String) map.get("CreateTime");
+
+                int dataType = 1;
+
+                if(doubleDataType != null) {
+                    dataType = doubleDataType.intValue();
                 }
 
-                outputStream.flush();
-                outputStream.close();
-                inputStream.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+                //需要插入到数据库
+                HistoryDataBean dataBean = new HistoryDataBean();
+
+                dataBean.setDeviceData(deviceData);
+                dataBean.setId(id);
+                dataBean.setCreateTimeStr(createTimeStr);
+                dataBean.setDataType(dataType);
+                dataBean.setCreateTime(createTime);
+                dataBean.setDeviceType(deviceType);
+                historyDataBeanBox.put(dataBean);
+                Log.d("当前共有数据:",historyDataBeanBox.getAll().size() + "条");
             }
         }
     }
 
-    @Override
-    public void onCreate(SQLiteDatabase db) {
-        // 在这里实现数据库的创建操作，但由于数据库已经在 assets 中存在，因此不需要执行创建表的操作
-    }
 
-    @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // 如果数据库版本发生变化，可以在这里处理数据库结构的变更
-    }
+    public static List<HistoryDataBean> query(int pageIndex, int pageSize, String startDt, String endDt, String deviceType) {
+        BoxStore mBoxStore = App.getBoxStore();
+        if (mBoxStore == null) return new ArrayList<>();
 
-    /**
-     * 查询数据，支持分页
-     * @param offset 起始位置
-     * @param limit 查询条数
-     * @return 查询结果列表
-     */
-    public List<HistoryDataBean> selectData(int offset, int limit) {
-        List<HistoryDataBean> list = new ArrayList<>();
-        String limitClause = offset + "," + limit; // 构建分页查询的限制条件
+        Box<HistoryDataBean> historyDataBeanBox = mBoxStore.boxFor(HistoryDataBean.class);
 
-        Cursor cursor = db.query(TABLE_NAME, null, null, null, null, null, null, limitClause);
+        // 计算偏移量
+        int offset = (pageIndex - 1) * pageSize;
 
-//        while (cursor.moveToNext()) {
-            // 获取每一列的数据
-//            String id = cursor.getString(cursor.getColumnIndex(COLUMN_ID));
-//            String deviceType = cursor.getString(cursor.getColumnIndex(COLUMN_DEVICE_TYPE));
-//            String deviceData = cursor.getString(cursor.getColumnIndex(COLUMN_DEVICE_DATA));
-//            int dataType = cursor.getInt(cursor.getColumnIndex(COLUMN_DATA_TYPE));
-//            String createTimeStr = cursor.getString(cursor.getColumnIndex(COLUMN_CREATE_TIME_STR));
-//            String createTime = cursor.getString(cursor.getColumnIndex(COLUMN_CREATE_TIME));
-//
-//            // 构造 HistoryDataBean 对象并添加到列表中
-//            HistoryDataBean historyDataBean = new HistoryDataBean(id, deviceType, deviceData, dataType, createTimeStr, createTime);
-//            list.add(historyDataBean);
-//
-//            Log.d(TAG, "selectData: Retrieved - " + historyDataBean.toString());
-//        }
+        // 创建查询并设置限制和偏移
+        QueryBuilder<HistoryDataBean> queryBuilder = historyDataBeanBox.query();
 
-        cursor.close();
-
-        return list;
-    }
-
-    /**
-     * 插入数据
-     * @param id 数据Id
-     * @param deviceType 设备类型
-     * @param deviceData 设备数据
-     * @param dataType 数据类型
-     * @param createTimeStr 创建时间字符串
-     * @param createTime 创建时间
-     * @return 插入数据的行号，-1 表示插入失败
-     */
-    public long insertData(String id, String deviceType, String deviceData, int dataType, String createTimeStr, String createTime) {
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_ID, id);
-        values.put(COLUMN_DEVICE_TYPE, deviceType);
-        values.put(COLUMN_DEVICE_DATA, deviceData);
-        values.put(COLUMN_DATA_TYPE, dataType);
-        values.put(COLUMN_CREATE_TIME_STR, createTimeStr);
-        values.put(COLUMN_CREATE_TIME, createTime);
-
-        long newRowId = db.insert(TABLE_NAME, null, values);
-        if (newRowId == -1) {
-            Log.e(TAG, "Error inserting data into " + TABLE_NAME);
-        } else {
-            Log.d(TAG, "Inserted data into " + TABLE_NAME + " with ID: " + newRowId);
+        // 添加时间筛选条件
+        if (startDt != null && !startDt.isEmpty() && endDt != null && !endDt.isEmpty()) {
+            queryBuilder
+                    .greater(HistoryDataBean_.CreateTime, startDt, QueryBuilder.StringOrder.CASE_SENSITIVE)
+                    .less(HistoryDataBean_.CreateTime, endDt, QueryBuilder.StringOrder.CASE_SENSITIVE);
+        } else if (startDt != null && !startDt.isEmpty()) {
+            queryBuilder.greater(HistoryDataBean_.CreateTime, startDt,QueryBuilder.StringOrder.CASE_SENSITIVE);
+        } else if (endDt != null && !endDt.isEmpty()) {
+            queryBuilder.less(HistoryDataBean_.CreateTime, endDt, QueryBuilder.StringOrder.CASE_SENSITIVE);
         }
 
-        return newRowId;
+        // 添加设备类型筛选条件
+        if (deviceType != null && !deviceType.isEmpty()) {
+            queryBuilder.equal(HistoryDataBean_.DeviceType, deviceType, QueryBuilder.StringOrder.CASE_SENSITIVE);
+        }
+
+        queryBuilder.orderDesc(HistoryDataBean_.id);
+
+        // 构建查询
+        Query<HistoryDataBean> query = queryBuilder.build();
+
+        // 执行查询并返回结果
+        return query.find(offset, pageSize);
     }
 
-    /**
-     * 关闭数据库连接
-     */
-    @Override
-    public synchronized void close() {
-        if (db != null) {
-            db.close();
+
+
+
+    public static void delete(String json) {
+        BoxStore mBoxStore = App.getBoxStore();
+        if(mBoxStore == null) return;
+
+        Map<String,Object> map = JsonUtil.toMap(json);
+
+        if(map != null && !map.isEmpty()){
+            String msgType = (String) map.get("MsgType");
+            if(msgType != null && msgType.equals("2")){
+                String dateString = (String) map.get("CreateTime");
+                if(dateString == null) return;
+
+                Box<HistoryDataBean> historyDataBeanBox = mBoxStore.boxFor(HistoryDataBean.class);
+
+                Query<HistoryDataBean> query = historyDataBeanBox.query()
+                        .less(HistoryDataBean_.CreateTime, dateString,QueryBuilder.StringOrder.CASE_SENSITIVE) // createTime属性小于指定时间的数据
+                        .build();
+
+                // 执行删除操作
+                query.remove();
+            }
         }
-        super.close();
     }
+
+    public static void testInsert() {
+
+        BoxStore mBoxStore = App.getBoxStore();
+        if(mBoxStore == null) return;
+
+        for(int i = 0; i<20000;i++){
+            String deviceType = "sjcgq";
+            int dataType = 1;
+
+            Date now = new Date();
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",Locale.US);
+            String createTimeStr = formatter.format(now);
+            String createTime = formatter.format(now) + ".000";
+
+            Map<String,Object> map = new HashMap<>();
+            map.put("Id",null);
+            map.put("DeviceId","FC0FE737C3B5");
+            map.put("DeviceCode","4");
+            map.put("DeviceName","水浸设备");
+            map.put("CreateTime",createTimeStr);
+            map.put("UpdateTime",null);
+            map.put("DeviceStatus",null);
+            map.put("Td","3");
+            map.put("SjStatus1","0");
+            map.put("SjStatus2","0");
+            map.put("CurLmd",null);
+            map.put("BJDelayed",null);
+            map.put("SHowzd",null);
+            map.put("TcpCmdType","sjcgq");
+            map.put("TcpDataType",null);
+
+            GsonBuilder gsonBuilder = new GsonBuilder();
+            gsonBuilder.serializeNulls();
+            Gson gson = gsonBuilder.create();
+            String deviceData = gson.toJson(map);
+
+            HistoryDataBean dataBean = new HistoryDataBean();
+
+            dataBean.setDeviceData(deviceData);
+            dataBean.setCreateTimeStr(createTimeStr);
+            dataBean.setDataType(dataType);
+            dataBean.setCreateTime(createTime);
+            dataBean.setDeviceType(deviceType);
+
+            Log.d("插入第"+(i+1)+"条数据:",dataBean.toJson());
+            if(i>=19999){
+                Log.d("数据插入完成，共插入"+(i+1)+"条数据","");
+            }
+            Box<HistoryDataBean> historyDataBeanBox = mBoxStore.boxFor(HistoryDataBean.class);
+            historyDataBeanBox.put(dataBean);
+        }
+
+    }
+
+
 }
-
-
-

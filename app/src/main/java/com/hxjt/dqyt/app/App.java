@@ -8,25 +8,34 @@ import static com.hxjt.dqyt.app.Constants.PORT;
 import static com.hxjt.dqyt.app.Constants.RECEIVED_MESSAGE;
 
 import android.content.Context;
+import android.os.Environment;
 import android.util.Log;
 
 import androidx.multidex.MultiDex;
 
 import com.easysocket.EasySocket;
-import com.easysocket.config.DefaultMessageProtocol;
 import com.easysocket.config.EasySocketOptions;
 import com.easysocket.entity.OriginReadData;
 import com.easysocket.entity.SocketAddress;
 import com.easysocket.interfaces.conn.ISocketActionListener;
 import com.easysocket.interfaces.conn.SocketActionListener;
+import com.hxjt.dqyt.BuildConfig;
 import com.hxjt.dqyt.base.BaseApplication;
+import com.hxjt.dqyt.bean.HistoryDataBean;
+import com.hxjt.dqyt.bean.MyObjectBox;
+import com.hxjt.dqyt.utils.DBUtils;
 import com.hxjt.dqyt.utils.SPUtil;
 
 import org.simple.eventbus.EventBus;
 
+import io.objectbox.BoxStore;
+import io.objectbox.android.Admin;
+
 public class App extends BaseApplication {
 
     private static Context context;
+    private static BoxStore mBoxStore;
+
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -40,7 +49,30 @@ public class App extends BaseApplication {
         super.onCreate();
         initEasySocket();
         EasySocket.getInstance().subscribeSocketAction(iSocketActionListener);
+
+        mBoxStore = MyObjectBox.builder().androidContext(this).build();
+        if (BuildConfig.DEBUG) {
+            // 添加调试
+            boolean start=  new Admin(mBoxStore).start(this);
+            Log.e("====start=======",start+"");
+        }
+        Log.d("App===", "Using ObjectBox " + BoxStore.getVersion() + " (" + BoxStore.getVersionNative() + ")");
+
     }
+
+    public static BoxStore getBoxStore() {
+        return mBoxStore;
+    }
+
+    /**
+     * 获取内置SD卡路径
+     *
+     * @return
+     */
+    public String getInnerSDCardPath() {
+        return Environment.getExternalStorageDirectory().getPath();
+    }
+
 
     /**
      * 初始化EasySocket
@@ -100,15 +132,17 @@ public class App extends BaseApplication {
         @Override
         public void onSocketResponse(SocketAddress socketAddress, byte[] readData) {
             super.onSocketResponse(socketAddress, readData);
-            String str = new String(readData);
-            EventBus.getDefault().post(str, RECEIVED_MESSAGE);
         }
 
         @Override
         public void onSocketResponse(SocketAddress socketAddress, String readData) {
             super.onSocketResponse(socketAddress, readData);
+            EventBus.getDefault().post(readData, RECEIVED_MESSAGE);
+            DBUtils.insert(readData);
+            DBUtils.delete(readData);
         }
     };
+
 
     public static Context getContext() {
         return context;

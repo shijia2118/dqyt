@@ -1,9 +1,16 @@
 pluginManagement {
     repositories {
-        gradlePluginPortal()
         google()
         mavenCentral()
+        gradlePluginPortal()
         maven { url 'https://www.jitpack.io' }
+        resolutionStrategy {
+            eachPlugin {
+                if (requested.id.namespace != null && requested.id.namespace.startsWith('custom-')) {
+                    useModule("${requested.id.namespace.substring(7)}:${requested.id.name}:${requested.version}")
+                }
+            }
+        }
     }
 }
 dependencyResolutionManagement {

@@ -2,6 +2,10 @@ package com.hxjt.dqyt.bean;
 
 import com.google.gson.Gson;
 
+import io.objectbox.annotation.Entity;
+import io.objectbox.annotation.Id;
+
+@Entity
 public class HistoryDataBean {
 
     /**
@@ -12,20 +16,20 @@ public class HistoryDataBean {
      * CreateTimeStr : 2024-06-14 13:53:57
      * CreateTime : 2024-06-14 13:53:57.242
      */
-
-    private String Id;
+    @Id
+    private long id;
     private String DeviceType;
     private String DeviceData;
     private int DataType;
     private String CreateTimeStr;
     private String CreateTime;
 
-    public String getId() {
-        return Id;
+    public long getId() {
+        return id;
     }
 
-    public void setId(String Id) {
-        this.Id = Id;
+    public void setId(long id) {
+        this.id = id;
     }
 
     public String getDeviceType() {
