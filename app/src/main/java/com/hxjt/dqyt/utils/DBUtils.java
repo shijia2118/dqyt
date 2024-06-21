@@ -113,9 +113,6 @@ public class DBUtils {
         return query.find(offset, pageSize);
     }
 
-
-
-
     public static void delete(String json) {
         BoxStore mBoxStore = App.getBoxStore();
         if(mBoxStore == null) return;

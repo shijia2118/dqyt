@@ -1,5 +1,10 @@
 package com.hxjt.dqyt.utils;
 
+import static com.hxjt.dqyt.app.Constants.DEFAULT_IP_ADDRESS;
+import static com.hxjt.dqyt.app.Constants.DEFAULT_PORT;
+import static com.hxjt.dqyt.app.Constants.IP_ADDRESS;
+import static com.hxjt.dqyt.app.Constants.PORT;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
@@ -254,6 +259,60 @@ public class SPUtil {
     public static String[] getStringArray(String key) {
         String savedString = getString(key, "");
         return TextUtils.isEmpty(savedString) ? new String[0] : savedString.split(",");
+    }
+
+    /**
+     * 保存IP
+     * @param value
+     */
+    public static void saveIp( String value) {
+        SharedPreferences sp = getSP();
+        SharedPreferences.Editor edit = sp.edit();
+        edit.putString(IP_ADDRESS, value);
+        edit.apply();
+    }
+
+    /**
+     * 获取IP，如果本地没有，则返回默认IP
+     * @return
+     */
+    public static String getIp() {
+        SharedPreferences sp = getSP();
+        String ip = sp.getString(IP_ADDRESS, "");
+        if(ip.isEmpty()){
+            saveIp(DEFAULT_IP_ADDRESS);
+            return DEFAULT_IP_ADDRESS;
+        }
+        return ip;
+    }
+
+    /**
+     * 保存PORT
+     * @param value
+     */
+    public static void savePort( String value) {
+        SharedPreferences sp = getSP();
+        SharedPreferences.Editor edit = sp.edit();
+        edit.putString(PORT, value);
+        edit.apply();
+    }
+
+    /**
+     * 获取Port，如果本地没有，则返回默认的Port
+     * @return
+     */
+    public static String getPort() {
+        SharedPreferences sp = getSP();
+        String port = sp.getString(PORT, "");
+        if(port.isEmpty()){
+            savePort(DEFAULT_PORT);
+            return DEFAULT_PORT;
+        }
+        return port;
+    }
+
+    public static String getAddress() {
+        return getIp() + ":" + getPort();
     }
 
 }
