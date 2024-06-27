@@ -164,7 +164,7 @@ public class MyAdapter extends BaseAdapter {
 //                    };
 //                    viewHolder.ivDeviceStatus.addOnAttachStateChangeListener(listener);
 //                    viewHolder.ivDeviceStatus.setTag(listener);
-
+//
 //                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
 //                        if (viewHolder.ivDeviceStatus.getTag() != null) {
 //                            viewHolder.ivDeviceStatus.removeOnAttachStateChangeListener((View.OnAttachStateChangeListener) viewHolder.ivDeviceStatus.getTag()); //移除旧的监听器

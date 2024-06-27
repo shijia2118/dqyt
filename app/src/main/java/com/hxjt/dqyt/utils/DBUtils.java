@@ -113,6 +113,29 @@ public class DBUtils {
         return query.find(offset, pageSize);
     }
 
+    public static List<HistoryDataBean> export(String deviceType) {
+        BoxStore mBoxStore = App.getBoxStore();
+        if (mBoxStore == null) return new ArrayList<>();
+
+        Box<HistoryDataBean> historyDataBeanBox = mBoxStore.boxFor(HistoryDataBean.class);
+
+        // 创建查询并设置限制和偏移
+        QueryBuilder<HistoryDataBean> queryBuilder = historyDataBeanBox.query();
+
+        // 添加设备类型筛选条件
+        if (deviceType != null && !deviceType.isEmpty()) {
+            queryBuilder.equal(HistoryDataBean_.DeviceType, deviceType, QueryBuilder.StringOrder.CASE_SENSITIVE);
+        }
+
+        queryBuilder.orderDesc(HistoryDataBean_.id);
+
+        // 构建查询
+        Query<HistoryDataBean> query = queryBuilder.build();
+
+        // 执行查询并返回结果
+        return query.find();
+    }
+
     public static void delete(String json) {
         BoxStore mBoxStore = App.getBoxStore();
         if(mBoxStore == null) return;

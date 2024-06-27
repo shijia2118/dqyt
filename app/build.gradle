@@ -14,8 +14,8 @@ android {
         applicationId "com.hxjt.dqyt"
         minSdk 21
         targetSdk 32
-        versionCode 10
-        versionName "1.0.10"
+        versionCode 11
+        versionName "1.1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -76,6 +76,8 @@ dependencies {
     debugImplementation "io.objectbox:objectbox-android-objectbrowser:4.0.1"
     releaseImplementation 'io.objectbox:objectbox-android:4.0.1'
     annotationProcessor 'io.objectbox:objectbox-processor:4.0.1'
+    implementation 'net.sourceforge.jexcelapi:jxl:2.6.12'
+
 }
 
 apply plugin: 'io.objectbox'

@@ -80,6 +80,17 @@
                 android:visibility="gone"
                 style="@style/Spinner_history_data_config" />
 
+            <TextView
+                android:id="@+id/tv_export_excel"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="导出Excel"
+                android:textSize="@dimen/dp_10"
+                android:layout_marginStart="@dimen/dp_20"
+                android:gravity="center_vertical"
+                android:layout_marginEnd="@dimen/dp_5"
+                android:textColor="@color/black"/>
+
         </LinearLayout>
 
         <!-- 动态标题栏 -->

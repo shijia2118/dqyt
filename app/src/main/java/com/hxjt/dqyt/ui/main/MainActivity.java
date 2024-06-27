@@ -32,6 +32,7 @@ import com.hxjt.dqyt.utils.ToastUtil;
 import org.simple.eventbus.EventBus;
 import org.simple.eventbus.Subscriber;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -112,7 +113,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
         }
 
         /************************* mock ***********************/
-//        Map<String,Object> map = new HashMap<>();
+        Map<String,Object> map = new HashMap<>();
 //        map.put("chl",1);
 //        map.put("dev_type","clzscgq");
 //        map.put("addr","123");
