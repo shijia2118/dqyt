@@ -29,7 +29,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.easysocket.EasySocket;
-import com.easysocket.config.EasySocketOptions;
 import com.easysocket.entity.SocketAddress;
 import com.easysocket.interfaces.conn.IConnectionManager;
 import com.hxjt.dqyt.R;
@@ -201,6 +200,8 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
         if(tvTcpSwitch.getText().equals("开启")){
             isOpenTcp = true;
             showLoading("正在开启...");
+            IConnectionManager iConnectionManager = EasySocket.getInstance().getDefconnection();
+            iConnectionManager.switchHost(new SocketAddress(SPUtil.getIp(),Integer.parseInt(SPUtil.getPort())));
             EasySocket.getInstance().connect();
         } else {
             showLoading("正在关闭...");
@@ -236,12 +237,7 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
         showSetStaticIpDialog();
     };
 
-    View.OnClickListener onResetPassword = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            showResetDialog();
-        }
-    };
+    View.OnClickListener onResetPassword = v -> showResetDialog();
 
     /**
      * 重置密码
