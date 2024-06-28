@@ -17,8 +17,6 @@ import com.hxjt.dqyt.utils.ActivityManager;
 import com.hxjt.dqyt.utils.ToastUtil;
 
 
-import butterknife.ButterKnife;
-
 public abstract class BaseActivity<P extends BasePresenter> extends AppCompatActivity implements BaseView {
 
     public Context context;
@@ -101,7 +99,6 @@ public abstract class BaseActivity<P extends BasePresenter> extends AppCompatAct
 
         context = this;
         setContentView(getLayoutId());
-        ButterKnife.bind(this);
         presenter = createPresenter();
         initView();
         initData();
