@@ -552,8 +552,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
         DatimeWheelLayout wheelLayout = picker.getWheelLayout();
         wheelLayout.setDateMode(DateMode.YEAR_MONTH_DAY);
         wheelLayout.setTimeMode(TimeMode.HOUR_24_HAS_SECOND);
-        wheelLayout.setDefaultValue(defaultEntity);
-        wheelLayout.setRange(beginEntity, endEntity);
+        wheelLayout.setRange(beginEntity, endEntity,defaultEntity);
         wheelLayout.setIndicatorEnabled(true);
         wheelLayout.setIndicatorColor(getResources().getColor(R.color.button));
         wheelLayout.setIndicatorSize(getResources().getDisplayMetrics().density * 2);

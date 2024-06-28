@@ -113,7 +113,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
         }
 
         /************************* mock ***********************/
-        Map<String,Object> map = new HashMap<>();
+//        Map<String,Object> map = new HashMap<>();
 //        map.put("chl",1);
 //        map.put("dev_type","clzscgq");
 //        map.put("addr","123");
