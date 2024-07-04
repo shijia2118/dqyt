@@ -24,6 +24,7 @@ import android.widget.TextView;
 import com.easysocket.EasySocket;
 import com.easysocket.interfaces.conn.IConnectionManager;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.hxjt.dqyt.R;
 import com.hxjt.dqyt.adapter.DeviceStatusAdapter;
 import com.hxjt.dqyt.adapter.TextButtonAdapter;
@@ -352,6 +353,26 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
                     Intent intent = new Intent(this, DeviceHistoryDataActivity.class);
                     intent.putExtra("device_info_bean",deviceInfoBean);
                     startActivity(intent);
+                } else if(buttonText.equals("开启")){
+                    if(deviceInfoBean != null){
+                        if(deviceInfoBean.getDev_type().equals(Constants.JCQ)){
+                            sendMessage_jdq("1","1");
+                            ToastUtil.s("指令下发成功");
+                        } else  if(deviceInfoBean.getDev_type().equals(Constants.BPQ)){
+                            sendMessage_jdq("3","1");
+                            ToastUtil.s("指令下发成功");
+                        }
+                    }
+                } else if(buttonText.equals("关闭")){
+                    if(deviceInfoBean != null){
+                        if(deviceInfoBean.getDev_type().equals(Constants.JCQ)){
+                            sendMessage_jdq("1","0");
+                            ToastUtil.s("指令下发成功");
+                        } else  if(deviceInfoBean.getDev_type().equals(Constants.BPQ)){
+                            sendMessage_jdq("3","0");
+                            ToastUtil.s("指令下发成功");
+                        }
+                    }
                 }
             });
         }
@@ -463,7 +484,7 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
             map.put("PayloadJson","");
             map.put("name","");
 
-            after10sHandle();
+            after5sHandle();
             Gson gson = new Gson();
             String jsonString = gson.toJson(map);
 
@@ -488,12 +509,38 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
             map.put("PayloadJson",payloadJson);
             map.put("name","");
 
-            after10sHandle();
+            after5sHandle();
             Gson gson = new Gson();
             String jsonString = gson.toJson(map);
 
             byte[] jsonBytes = jsonString.getBytes(StandardCharsets.UTF_8);
 
+            EasySocket.getInstance().upMessage(jsonBytes);
+        }
+    }
+
+    private void sendMessage_jdq(String scd,String state){
+
+        if(deviceInfoBean != null){
+            Map<String,Object> map = new HashMap<>();
+            map.put("DeviceType","bsmio");
+            map.put("DeviceCode","1");
+            map.put("CmdType","15");
+            map.put("jcqdz",null);
+
+            Map<String,Object> payloadMap = new HashMap<>();
+            payloadMap.put("scd",scd);
+            payloadMap.put("state",state);
+
+            GsonBuilder gsonBuilder = new GsonBuilder();
+            gsonBuilder.serializeNulls();
+            Gson gson = gsonBuilder.create();
+
+            String payloadJson = gson.toJson(payloadMap);
+            map.put("PayloadJson",payloadJson);
+            String jsonString = gson.toJson(map);
+
+            byte[] jsonBytes = jsonString.getBytes(StandardCharsets.UTF_8);
             EasySocket.getInstance().upMessage(jsonBytes);
         }
     }
@@ -506,7 +553,7 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
      *  5s后，若tcp无返回，则:
      *  停止收消息、关闭loading、所有下方指令为false
      */
-    private void after10sHandle(){
+    private void after5sHandle(){
         handler = new Handler();
         handler.postDelayed(() -> {
             if(handler != null){
@@ -537,6 +584,8 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
             byte[] jsonBytes = jsonString.getBytes(StandardCharsets.UTF_8);
 
             EasySocket.getInstance().upMessage(jsonBytes);
+
+            after5sHandle();
         }
     }
 

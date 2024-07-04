@@ -198,4 +198,15 @@ public class JsonUtil {
         return historyDataList;
     }
 
+    public static List<Map<String, Double>> parseJsonToMapList(String jsonString) {
+        try {
+            Gson gson = new Gson();
+            Type listType = new TypeToken<List<Map<String, Double>>>() {}.getType();
+            return gson.fromJson(jsonString, listType);
+        } catch (JsonSyntaxException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 }

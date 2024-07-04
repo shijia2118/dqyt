@@ -3,20 +3,36 @@ package com.hxjt.dqyt.ui.main;
 import static com.hxjt.dqyt.app.Constants.CONNECTION_CHANGED;
 import static com.hxjt.dqyt.app.Constants.RECEIVED_MESSAGE;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+
+import com.bumptech.glide.Glide;
 import com.easysocket.EasySocket;
 import com.easysocket.interfaces.conn.IConnectionManager;
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.hxjt.dqyt.R;
 import com.hxjt.dqyt.adapter.MyAdapter;
 import com.hxjt.dqyt.app.Constants;
@@ -24,14 +40,18 @@ import com.hxjt.dqyt.base.BaseActivity;
 import com.hxjt.dqyt.bean.DeviceInfoBean;
 import com.hxjt.dqyt.bean.DeviceInfoListBean;
 import com.hxjt.dqyt.ui.system.SystemSetActivity;
-import com.hxjt.dqyt.utils.DBUtils;
 import com.hxjt.dqyt.utils.JsonUtil;
 import com.hxjt.dqyt.utils.TcpUtil;
 import com.hxjt.dqyt.utils.ToastUtil;
+import com.lxj.xpopup.XPopup;
+import com.lxj.xpopup.animator.PopupAnimator;
+import com.lxj.xpopup.core.CenterPopupView;
 
 import org.simple.eventbus.EventBus;
 import org.simple.eventbus.Subscriber;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +61,10 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
 
     private ImageView tcpStatusImg;
     private String deviceNo; //网关编号
+    private ImageView iv_oil_gif;
+    private boolean isExpanded = true;
+    private boolean isCyjDialogOpening = false;
+    private LineChart mLineChart;
 
     LinearLayout emptyView ;
     private String mTimeValue;
@@ -50,6 +74,10 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
     private GridView gridView;
     private final List<DeviceInfoBean> mDevices = new ArrayList<>();
 
+    private final Handler shrinkHandler = new Handler();
+    private final Runnable shrinkRunnable = this::shrinkImage;
+
+    List<Map<String,Double>> points;
 
     @Override
     protected MainPresenter createPresenter() {
@@ -64,6 +92,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
     @Override
     public void initData() {}
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public void initView() {
         tcpStatusImg = findViewById(R.id.tv_connect_status);
@@ -76,6 +105,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
         LinearLayout llSystemSet = findViewById(R.id.ll_system_set);
         TextView tvCloseApp = findViewById(R.id.tv_close_app);
         LinearLayout ll_right = findViewById(R.id.ll_right);
+        iv_oil_gif = findViewById(R.id.iv_oil_gif);
 
         llBack.setVisibility(View.GONE);
         tvTitle.setVisibility(View.VISIBLE);
@@ -99,6 +129,28 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
         llSystemSet.setOnClickListener(onSystemSetListener);
         tvCloseApp.setOnClickListener(onCloseApp);
         tv_reload.setOnClickListener(onReload);
+        iv_oil_gif.setOnTouchListener(new View.OnTouchListener() {
+            private final GestureDetector gestureDetector = new GestureDetector(MainActivity.this, new GestureDetector.SimpleOnGestureListener() {
+                @Override
+                public boolean onSingleTapUp(MotionEvent e) {
+                    handleImageClick();
+                    return true;
+                }
+            });
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return gestureDetector.onTouchEvent(event);
+            }
+        });
+
+        iv_oil_gif.setClickable(true);
+        iv_oil_gif.setFocusable(true);
+
+        loadImage(iv_oil_gif);
+
+        // 默认展开
+        expandImage();
 
         EventBus.getDefault().register(this);
 
@@ -115,7 +167,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
         /************************* mock ***********************/
 //        Map<String,Object> map = new HashMap<>();
 //        map.put("chl",1);
-//        map.put("dev_type","clzscgq");
+//        map.put("dev_type","bpq");
 //        map.put("addr","123");
 //        map.put("name","变频器");
 //        emptyView.setVisibility(View.GONE);
@@ -133,7 +185,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
 //        map.put("chl",1);
 //        map.put("dev_type","jcq");
 //        map.put("addr","123");
-//        map.put("name","温湿度传感器");
+//        map.put("name","接触器");
 //        emptyView.setVisibility(View.GONE);
 //        DeviceInfoBean deviceInfoBean3 = DeviceInfoBean.fromMap(map);
 //        mDevices.add(deviceInfoBean3);
@@ -167,6 +219,8 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
         String cmdType = (String) map.get("TcpCmdType");
 
         if(cmdType == null) return;
+
+        String zbd = (String) map.get("Zbd");
 
         if(cmdType.equals("103")){
             //说明是 设备列表接口
@@ -240,6 +294,13 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
                     }
                 }
             }
+        } else if(!TextUtils.isEmpty(zbd) && isCyjDialogOpening){
+            //抽油机数据统计表
+            List<Map<String,Double>> mapList = JsonUtil.parseJsonToMapList(zbd);
+
+
+
+
         } else  if(mDevices != null && !mDevices.isEmpty()){
             for(DeviceInfoBean infoBean : mDevices){
                 String deviceType = infoBean.getDev_type();
@@ -362,6 +423,10 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
     protected void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
+        shrinkHandler.removeCallbacks(shrinkRunnable);
+        if(handler != null){
+            handler.removeCallbacksAndMessages(null);
+        }
     }
 
     /**
@@ -387,6 +452,39 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
         after5sHandle();
     };
 
+    private void handleImageClick() {
+        new XPopup.Builder(MainActivity.this)
+                .dismissOnBackPressed(false) // 按返回键是否关闭弹窗，默认为true
+                .dismissOnTouchOutside(false) // 点击外部是否关闭弹窗，默认为true
+                .asCustom(new OilGraphDialog(context))
+                .show();
+        isCyjDialogOpening = true;
+        if (!isExpanded) {
+            expandImage();
+        }
+    }
+
+    private void expandImage() {
+        iv_oil_gif.animate()
+                .translationX(0)
+                .setDuration(300)
+                .start();
+        isExpanded = true;
+
+        // 延迟3秒后自动收缩
+        shrinkHandler.removeCallbacks(shrinkRunnable);
+        shrinkHandler.postDelayed(shrinkRunnable, 3000);
+    }
+
+
+    private void shrinkImage() {
+        iv_oil_gif.animate()
+                .translationX((float) iv_oil_gif.getWidth() * 2/3)
+                .setDuration(300)
+                .start();
+        isExpanded = false;
+    }
+
     /**
      *  5s后，若tcp无返回，则:
      *  停止收消息、关闭loading、所有下方指令为false
@@ -401,6 +499,162 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
             ToastUtil.s("操作超时");
         }, 5000);
     }
+
+    /**
+     * 用grild加载图片
+     */
+    public void loadImage(ImageView imageView){
+        Glide.with(this)
+                .asGif()
+                .load(R.drawable.oid_field)
+                .into(imageView);
+    }
+
+    class OilGraphDialog extends CenterPopupView {
+
+
+        //注意：自定义弹窗本质是一个自定义View，但是只需重写一个参数的构造，其他的不要重写，所有的自定义弹窗都是这样。
+        public OilGraphDialog(@NonNull Context context) {
+            super(context);
+        }
+
+        // 返回自定义弹窗的布局
+        @Override
+        protected int getImplLayoutId() {
+            return R.layout.oid_graph_dialog;
+        }
+
+        // 执行初始化操作，比如：findView，设置点击，或者任何你弹窗内的业务逻辑
+        @Override
+        protected void onCreate() {
+            super.onCreate();
+
+            ImageView iv_close = findViewById(R.id.iv_close);
+            mLineChart = findViewById(R.id.lc_chart);
+
+            iv_close.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dismiss();
+                    isCyjDialogOpening = false;
+                }
+            });
+
+            points = new ArrayList<>();
+
+            points.add(new HashMap() {{ put("a_x", 0.0); put("a_y", 48.17); }});
+            points.add(new HashMap() {{ put("b_x", 0.54); put("b_y", 50.19); }});
+            points.add(new HashMap() {{ put("c_x", 3.0); put("c_y", 50.19); }});
+            points.add(new HashMap() {{ put("d_x", 2.46); put("d_y", 48.17); }});
+
+            setData();
+        }
+
+        private void setData() {
+            // 创建所有点的 Entry 列表
+            List<Entry> allEntries = new ArrayList<>();
+            for (Map<String, Double> map : points) {
+                for (Map.Entry<String, Double> entry : map.entrySet()) {
+                    if (entry.getKey().endsWith("_x")) {
+                        String keyPrefix = entry.getKey().substring(0, entry.getKey().indexOf('_'));
+                        Double x0 = entry.getValue();
+                        Double y0 = map.get(keyPrefix + "_y");
+
+                        if (x0 == null || y0 == null) {
+                            System.out.println("Missing value for " + keyPrefix + ": x=" + x0 + ", y=" + y0);
+                            continue;
+                        }
+
+                        double x = x0;
+                        double y = y0;
+
+                        allEntries.add(new Entry((float) x, (float) y));
+                    }
+                }
+            }
+
+            // 创建所有点的数据集
+            LineDataSet allDataSet = new LineDataSet(allEntries, "所有点");
+            allDataSet.setColor(Color.BLUE);
+            allDataSet.setValueTextColor(Color.BLUE);
+            allDataSet.setValueTextSize(14);
+
+            // 创建 LineData 对象并设置数据集
+            LineData lineData = new LineData(allDataSet);
+            mLineChart.setData(lineData);
+
+            // X轴设置
+            XAxis xAxis = mLineChart.getXAxis();
+            xAxis.setPosition(XAxis.XAxisPosition.BOTTOM); // X轴显示在底部
+            xAxis.setTextSize(14);
+            xAxis.setGranularity(1f); // 设置最小间隔为1，防止标签的重叠
+            xAxis.setLabelCount(points.size(), true); // 设置标签数量与数据点数量一致
+
+            // Y轴设置
+            YAxis rightAxis = mLineChart.getAxisRight();
+            rightAxis.setEnabled(false); // 右侧Y轴禁用
+
+            YAxis leftAxis = mLineChart.getAxisLeft();
+            leftAxis.setTextSize(14);
+
+            // 设置图例
+            Legend legend = mLineChart.getLegend();
+            legend.setForm(Legend.LegendForm.CIRCLE);
+            legend.setTextColor(Color.BLACK);
+
+            // 刷新图表
+            mLineChart.invalidate();
+        }
+
+
+
+        // 设置最大宽度，看需要而定，
+        @Override
+        protected int getMaxWidth() {
+            return super.getMaxWidth();
+//            return (super.getMaxWidth() * 4 / 5);
+        }
+
+        // 设置最大高度，看需要而定
+        @Override
+        protected int getMaxHeight() {
+            return super.getMaxHeight();
+        }
+
+        // 设置自定义动画器，看需要而定
+        @Override
+        protected PopupAnimator getPopupAnimator() {
+            return super.getPopupAnimator();
+        }
+
+        /**
+         * 弹窗的宽度，用来动态设定当前弹窗的宽度，受getMaxWidth()限制
+         *
+         * @return
+         */
+        protected int getPopupWidth() {
+            return 0;
+        }
+
+        /**
+         * 弹窗的高度，用来动态设定当前弹窗的高度，受getMaxHeight()限制
+         *
+         * @return
+         */
+        protected int getPopupHeight() {
+            return 0;
+        }
+
+//        public void refresh(String[] x0,String[] y0,String[] x1,String[] y1){
+//            minX = x0;
+//            maxX = x1;
+//            minY = y0;
+//            maxY = y1;
+//            mLineChart.invalidate();
+//        }
+
+    }
+
 
 
 }

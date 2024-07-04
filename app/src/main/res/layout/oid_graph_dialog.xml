@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="@dimen/dp_10"
+    android:layout_marginVertical="@dimen/dp_35"
+    android:background="@drawable/shape_white_bg"
+    app:cardElevation="0dp">
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="功图曲线"
+        android:textSize="@dimen/sp_12"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <ImageView
+        android:id="@+id/iv_close"
+        android:layout_width="@dimen/dp_10"
+        android:layout_height="@dimen/dp_10"
+        android:contentDescription="TODO"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:src="@drawable/icon_cross"/>
+
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/lc_chart"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="@dimen/dp_10"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_y_unit"
+        app:layout_constraintEnd_toStartOf="@+id/tv_x_unit"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+    <TextView
+        android:id="@+id/tv_x_unit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="(M)"
+        android:textSize="@dimen/sp_6"
+        app:layout_constraintStart_toEndOf="@+id/lc_chart"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/lc_chart"/>
+
+    <TextView
+        android:id="@+id/tv_y_unit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="(KN)"
+        android:textSize="@dimen/sp_6"
+        app:layout_constraintStart_toStartOf="@+id/lc_chart"
+        app:layout_constraintBottom_toTopOf="@+id/lc_chart"
+        app:layout_constraintTop_toBottomOf="@+id/tv_title"/>
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
