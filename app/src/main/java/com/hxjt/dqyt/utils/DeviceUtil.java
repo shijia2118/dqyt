@@ -100,7 +100,7 @@ public class DeviceUtil {
             case "zdjccgq":return "震动监测\n传感器";
             case "ymcsy":return "液面\n测试仪";
             case "sk645":return "塑壳645";
-            case "jcq":return "接触器";
+            case "jcq":return "工频接触器";
             default:return "";
         }
     }
@@ -117,13 +117,14 @@ public class DeviceUtil {
             case "ywcgq":return new String[]{"修改名称","删除","遥测","历史数据"};
             case "sjcgq":return new String[]{"修改名称","删除","遥测","历史数据"};
 //            case "bpq":return new String[]{"修改名称","删除","遥测","正转运行","反转运行","停机","频率设置","历史数据"};
-            case "bpq":return new String[]{"修改名称","删除","遥测","开启","关闭","停机","频率设置","历史数据"};
+            case "bpq":return new String[]{"修改名称","删除","遥测","开启","关闭","频率设置","历史数据"};
             case "dlq":return new String[]{"修改名称","删除","遥测","历史数据"};
             case "clzscgq":return new String[]{"修改名称","删除","遥测","历史数据"};
             case "zdjccgq":return new String[]{"修改名称","删除","遥测","历史数据"};
             case "ymcsy":return new String[]{"修改名称","删除","遥测","历史数据"};
-            case "sk645":return new String[]{"修改名称","删除","遥测","分闸","合闸","历史数据"};
-            case "jcq":return new String[]{"修改名称","删除","读取","开启","关闭","历史数据"};
+//            case "sk645":return new String[]{"修改名称","删除","遥测","分闸","合闸","历史数据"};
+            case "sk645":return new String[]{"修改名称","删除","遥测","分闸","历史数据"};
+            case "jcq":return new String[]{"修改名称","删除","读取","工频开启","工频关闭","历史数据"};
             default:return new String[]{"修改名称","删除","遥测","历史数据"};
         }
     }

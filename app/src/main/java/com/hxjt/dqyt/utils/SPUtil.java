@@ -2,6 +2,7 @@ package com.hxjt.dqyt.utils;
 
 import static com.hxjt.dqyt.app.Constants.DEFAULT_IP_ADDRESS;
 import static com.hxjt.dqyt.app.Constants.DEFAULT_PORT;
+import static com.hxjt.dqyt.app.Constants.IF_HAS_JDQ;
 import static com.hxjt.dqyt.app.Constants.IP_ADDRESS;
 import static com.hxjt.dqyt.app.Constants.PORT;
 
@@ -314,6 +315,25 @@ public class SPUtil {
     public static String getAddress() {
         return getIp() + ":" + getPort();
     }
+
+
+    public static void enableJdq( boolean value) {
+        SharedPreferences sp = getSP();
+        SharedPreferences.Editor edit = sp.edit();
+        edit.putBoolean(IF_HAS_JDQ, value);
+        edit.apply();
+    }
+
+    /**
+     * 是否含有继电器设备
+     * @return
+     */
+    public static boolean hasJdq() {
+        SharedPreferences sp = getSP();
+        boolean result = sp.getBoolean(IF_HAS_JDQ, false);
+        return result;
+    }
+
 
 }
 

@@ -34,6 +34,7 @@ public class DeviceInfoListBean {
     private List<DeviceInfoBean> AddrList_Ymcsy;
     private List<DeviceInfoBean> AddrList_sk645;
     private List<DeviceInfoBean> AddrList_jcq;
+    private List<DeviceInfoBean> AddrList_bsmio;
 
     public String getDeviceNo() {
         return deviceNo;
@@ -129,6 +130,14 @@ public class DeviceInfoListBean {
 
     public void setAddrList_jcq(List<DeviceInfoBean> addrList_jcq) {
         AddrList_jcq = addrList_jcq;
+    }
+
+    public List<DeviceInfoBean> getAddrList_bsmio() {
+        return AddrList_bsmio;
+    }
+
+    public void setAddrList_bsmio(List<DeviceInfoBean> addrList_bsmio) {
+        AddrList_bsmio = addrList_bsmio;
     }
 
     public Map<String, Object> toMap() {

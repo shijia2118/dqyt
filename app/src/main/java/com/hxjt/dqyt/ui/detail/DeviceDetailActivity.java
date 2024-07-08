@@ -2,6 +2,7 @@ package com.hxjt.dqyt.ui.detail;
 
 import static com.hxjt.dqyt.app.Constants.CONNECTION_CHANGED;
 import static com.hxjt.dqyt.app.Constants.DLQ_TYPE;
+import static com.hxjt.dqyt.app.Constants.JCQ;
 import static com.hxjt.dqyt.app.Constants.RECEIVED_MESSAGE;
 import static com.hxjt.dqyt.app.Constants.SK645;
 
@@ -143,8 +144,23 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
 
                 if(deviceCode == null) return;
 
-                // 收到的tcp数据包属于当前设备(设备类型和设备编号均一致)
-                if(cmdType.equals(deviceType)  && deviceCode.equals(deviceInfoBean.getAddr())){
+                if(deviceInfoBean.getDev_type().equals(JCQ) && SPUtil.hasJdq()){
+                    String data = (String) map.get("srd_3");
+
+                    if(data!=null && !data.isEmpty()) {
+                        Map<String,Object> result = new HashMap<>();
+                        result.put("TcpCmdType","jcq");
+                        result.put("DeviceCode","100");
+                        if(data.equals("0")){
+                            result.put("data","1");
+                        } else if(data.equals("1")){
+                            result.put("data","0");
+                        }
+                        mReceivedTcpData = result;
+                        statusAdapter.update(DeviceDetailActivity.this,stateLabels,mReceivedTcpData);
+                    }
+                } else if(cmdType.equals(deviceType)  && deviceCode.equals(deviceInfoBean.getAddr())){
+                    // 收到的tcp数据包属于当前设备(设备类型和设备编号均一致)
                     hideLoading();
 
                     String msg = getMsgByOperationType();
@@ -345,8 +361,6 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
                                 isTj = true;
                                 sendMessage_Bpq("5");
                             }).show();
-
-
                 }else if(buttonText.equals("频率设置")){
                     showPlszDialog();
                 }else if(buttonText.equals("历史数据")){
@@ -354,25 +368,17 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
                     intent.putExtra("device_info_bean",deviceInfoBean);
                     startActivity(intent);
                 } else if(buttonText.equals("开启")){
-                    if(deviceInfoBean != null){
-                        if(deviceInfoBean.getDev_type().equals(Constants.JCQ)){
-                            sendMessage_jdq("1","1");
-                            ToastUtil.s("指令下发成功");
-                        } else  if(deviceInfoBean.getDev_type().equals(Constants.BPQ)){
-                            sendMessage_jdq("3","1");
-                            ToastUtil.s("指令下发成功");
-                        }
-                    }
+                    sendMessage_jdq("2","1");
+                    ToastUtil.s("指令下发成功");
                 } else if(buttonText.equals("关闭")){
-                    if(deviceInfoBean != null){
-                        if(deviceInfoBean.getDev_type().equals(Constants.JCQ)){
-                            sendMessage_jdq("1","0");
-                            ToastUtil.s("指令下发成功");
-                        } else  if(deviceInfoBean.getDev_type().equals(Constants.BPQ)){
-                            sendMessage_jdq("3","0");
-                            ToastUtil.s("指令下发成功");
-                        }
-                    }
+                    sendMessage_jdq("4","0");
+                    ToastUtil.s("指令下发成功");
+                } else if(buttonText.equals("工频开启")){
+                    sendMessage_jdq("1","1");
+                    ToastUtil.s("指令下发成功");
+                } else if(buttonText.equals("工频关闭")){
+                    sendMessage_jdq("3","0");
+                    ToastUtil.s("指令下发成功");
                 }
             });
         }

@@ -28,6 +28,7 @@ public class Constants {
 
     public static final String RECEIVED_MESSAGE = "received_message";
     public static final String CONNECTION_CHANGED = "connection_changed";
+    public static final String IF_HAS_JDQ = "if has jdq device";
 
     public static final String BPQ ="bpq" ; //变频器
     public static final String DLQ ="dlq" ; //断路器

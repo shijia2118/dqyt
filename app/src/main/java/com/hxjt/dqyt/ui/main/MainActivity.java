@@ -41,6 +41,7 @@ import com.hxjt.dqyt.bean.DeviceInfoBean;
 import com.hxjt.dqyt.bean.DeviceInfoListBean;
 import com.hxjt.dqyt.ui.system.SystemSetActivity;
 import com.hxjt.dqyt.utils.JsonUtil;
+import com.hxjt.dqyt.utils.SPUtil;
 import com.hxjt.dqyt.utils.TcpUtil;
 import com.hxjt.dqyt.utils.ToastUtil;
 import com.lxj.xpopup.XPopup;
@@ -55,6 +56,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimerTask;
 
 
 public class MainActivity extends BaseActivity<MainPresenter> implements MainView{
@@ -63,7 +65,6 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
     private String deviceNo; //网关编号
     private ImageView iv_oil_gif;
     private boolean isExpanded = true;
-    private boolean isCyjDialogOpening = false;
     private LineChart mLineChart;
 
     LinearLayout emptyView ;
@@ -78,6 +79,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
     private final Runnable shrinkRunnable = this::shrinkImage;
 
     List<Map<String,Double>> points;
+    private OilGraphDialog oilGraphDialog;
 
     @Override
     protected MainPresenter createPresenter() {
@@ -185,7 +187,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
 //        map.put("chl",1);
 //        map.put("dev_type","jcq");
 //        map.put("addr","123");
-//        map.put("name","接触器");
+//        map.put("name","旁路接触器");
 //        emptyView.setVisibility(View.GONE);
 //        DeviceInfoBean deviceInfoBean3 = DeviceInfoBean.fromMap(map);
 //        mDevices.add(deviceInfoBean3);
@@ -197,8 +199,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
 //            }
 //        }).start();
         /************************* mock ***********************/
-
-
+        points = new ArrayList<>();
     }
 
     @Subscriber(tag = CONNECTION_CHANGED)
@@ -282,6 +283,10 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
                         mDevices.addAll(deviceInfoListBean.getAddrList_jcq());
                     }
 
+                    //判断是否箱子中接了继电器
+                    boolean hasJdq = deviceInfoListBean.getAddrList_bsmio() != null && !deviceInfoListBean.getAddrList_bsmio().isEmpty();
+                    SPUtil.enableJdq(hasJdq);
+
                     if(mDevices.isEmpty()){
                         emptyView.setVisibility(View.VISIBLE);
                         gridView.setEmptyView(emptyView);
@@ -290,18 +295,29 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
                             mMyAdapter.update(MainActivity.this,mDevices,mTimeValue,deviceNo);
                         }
                         emptyView.setVisibility(View.GONE);
-//                                gridView.setAdapter(mMyAdapter);
                     }
                 }
             }
-        } else if(!TextUtils.isEmpty(zbd) && isCyjDialogOpening){
+        } else if(!TextUtils.isEmpty(zbd) && oilGraphDialog != null){
             //抽油机数据统计表
-            List<Map<String,Double>> mapList = JsonUtil.parseJsonToMapList(zbd);
-
-
-
-
-        } else  if(mDevices != null && !mDevices.isEmpty()){
+            points = JsonUtil.parseJsonToMapList(zbd);
+            oilGraphDialog.setData();
+        } else if(SPUtil.hasJdq() && cmdType.equals("bsmio")){
+            //外接变频器
+            for(DeviceInfoBean infoBean : mDevices){
+                if(infoBean.getDev_type().equals(Constants.JCQ)){
+                    String jcq = "断开";
+                    //外接接触器
+                    String scd1 = (String) map.get("srd_3");
+                    if(scd1!=null&&scd1.equals("1")){
+                        jcq = "运行";
+                    }
+                    mTimeValue = jcq;
+                    mMyAdapter.updateTimeValue(infoBean,mTimeValue);
+                    break;
+                }
+            }
+        } else if(mDevices != null && !mDevices.isEmpty()){
             for(DeviceInfoBean infoBean : mDevices){
                 String deviceType = infoBean.getDev_type();
                 if (deviceType!=null) {
@@ -310,7 +326,6 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
                     if(deviceType.equals(Constants.DLQ)){
                         deviceCode = (String) map.get("SN");
                     }
-
                     //收到的tcp数据包属于当前设备
                     if(deviceCode != null && deviceCode.equals(infoBean.getAddr()) && cmdType.equals(deviceType)) {
                         if(deviceType.equals(Constants.SK645)){
@@ -388,7 +403,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
                             mTimeValue = (String) map.get("Yxpl");
                         } else if(deviceType.equals(Constants.DLQ)){
                             mTimeValue = (String) map.get("");
-                        } else if(deviceType.equals(Constants.JCQ)){
+                        } else if(deviceType.equals(Constants.JCQ) && !SPUtil.hasJdq()){
                             String jcq = "断开";
                             String result = (String) map.get("data");
                             if(result!=null&&result.equals("0")){
@@ -453,12 +468,14 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
     };
 
     private void handleImageClick() {
+        if(oilGraphDialog == null) {
+            oilGraphDialog = new OilGraphDialog(context);
+        }
         new XPopup.Builder(MainActivity.this)
                 .dismissOnBackPressed(false) // 按返回键是否关闭弹窗，默认为true
                 .dismissOnTouchOutside(false) // 点击外部是否关闭弹窗，默认为true
-                .asCustom(new OilGraphDialog(context))
+                .asCustom(oilGraphDialog)
                 .show();
-        isCyjDialogOpening = true;
         if (!isExpanded) {
             expandImage();
         }
@@ -512,6 +529,8 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
 
     class OilGraphDialog extends CenterPopupView {
 
+        private TextView tv_x_unit;
+        private TextView tv_y_unit;
 
         //注意：自定义弹窗本质是一个自定义View，但是只需重写一个参数的构造，其他的不要重写，所有的自定义弹窗都是这样。
         public OilGraphDialog(@NonNull Context context) {
@@ -531,27 +550,34 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
 
             ImageView iv_close = findViewById(R.id.iv_close);
             mLineChart = findViewById(R.id.lc_chart);
+            tv_x_unit = findViewById(R.id.tv_x_unit);
+            tv_y_unit = findViewById(R.id.tv_y_unit);
 
-            iv_close.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    dismiss();
-                    isCyjDialogOpening = false;
-                }
+            iv_close.setOnClickListener(v -> {
+                dismiss();
+                oilGraphDialog = null;
             });
-
-            points = new ArrayList<>();
-
-            points.add(new HashMap() {{ put("a_x", 0.0); put("a_y", 48.17); }});
-            points.add(new HashMap() {{ put("b_x", 0.54); put("b_y", 50.19); }});
-            points.add(new HashMap() {{ put("c_x", 3.0); put("c_y", 50.19); }});
-            points.add(new HashMap() {{ put("d_x", 2.46); put("d_y", 48.17); }});
+            //mock
+//            points.add(new HashMap() {{ put("a_x", 0.0); put("a_y", 48.17); }});
+//            points.add(new HashMap() {{ put("b_x", 0.54); put("b_y", 50.19); }});
+//            points.add(new HashMap() {{ put("c_x", 3.0); put("c_y", 50.19); }});
+//            points.add(new HashMap() {{ put("d_x", 2.46); put("d_y", 48.17); }});
 
             setData();
         }
 
-        private void setData() {
+        public void setData() {
+            if (points == null || points.isEmpty()) {
+                tv_x_unit.setVisibility(GONE);
+                tv_y_unit.setVisibility(GONE);
+                mLineChart.setNoDataText("暂无数据");
+                mLineChart.clear(); // 清除任何现有数据
+                mLineChart.invalidate(); // 刷新图表
+                return;
+            }
             // 创建所有点的 Entry 列表
+            tv_x_unit.setVisibility(VISIBLE);
+            tv_y_unit.setVisibility(VISIBLE);
             List<Entry> allEntries = new ArrayList<>();
             for (Map<String, Double> map : points) {
                 for (Map.Entry<String, Double> entry : map.entrySet()) {
@@ -561,10 +587,8 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
                         Double y0 = map.get(keyPrefix + "_y");
 
                         if (x0 == null || y0 == null) {
-                            System.out.println("Missing value for " + keyPrefix + ": x=" + x0 + ", y=" + y0);
-                            continue;
+                            return;
                         }
-
                         double x = x0;
                         double y = y0;
 
@@ -573,14 +597,43 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
                 }
             }
 
-            // 创建所有点的数据集
-            LineDataSet allDataSet = new LineDataSet(allEntries, "所有点");
-            allDataSet.setColor(Color.BLUE);
-            allDataSet.setValueTextColor(Color.BLUE);
-            allDataSet.setValueTextSize(14);
+            if(allEntries.size() != 4) return;
+
+            List<Entry> maxEntries = new ArrayList<>();
+            List<Entry> minEntries = new ArrayList<>();
+
+            maxEntries.add(allEntries.get(0));
+            maxEntries.add(allEntries.get(1));
+            maxEntries.add(allEntries.get(2));
+
+            minEntries.add(allEntries.get(0));
+            minEntries.add(allEntries.get(3));
+            minEntries.add(allEntries.get(2));
+
+            // 创建最大值的数据集
+            LineDataSet maxDataSet = new LineDataSet(maxEntries, "最大值");
+            maxDataSet.setColor(Color.RED);
+            maxDataSet.setValueTextColor(Color.RED);
+            maxDataSet.setValueTextSize(14);
+            maxDataSet.setMode(LineDataSet.Mode.LINEAR);
+            maxDataSet.setDrawValues(true);
+            maxDataSet.setDrawCircles(true);
+            maxDataSet.setCircleColor(Color.RED);
+
+            // 创建最小值的数据集
+            LineDataSet minDataSet = new LineDataSet(minEntries, "最小值");
+            minDataSet.setColor(Color.BLACK);
+            minDataSet.setValueTextColor(Color.BLACK);
+            minDataSet.setValueTextSize(14);
+            minDataSet.setMode(LineDataSet.Mode.LINEAR);
+            minDataSet.setDrawValues(true);
+            minDataSet.setDrawCircles(true);
+            minDataSet.setCircleColor(Color.BLACK);
 
             // 创建 LineData 对象并设置数据集
-            LineData lineData = new LineData(allDataSet);
+            LineData lineData = new LineData();
+            lineData.addDataSet(maxDataSet);
+            lineData.addDataSet(minDataSet);
             mLineChart.setData(lineData);
 
             // X轴设置
@@ -606,13 +659,10 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
             mLineChart.invalidate();
         }
 
-
-
         // 设置最大宽度，看需要而定，
         @Override
         protected int getMaxWidth() {
             return super.getMaxWidth();
-//            return (super.getMaxWidth() * 4 / 5);
         }
 
         // 设置最大高度，看需要而定
@@ -645,16 +695,6 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
             return 0;
         }
 
-//        public void refresh(String[] x0,String[] y0,String[] x1,String[] y1){
-//            minX = x0;
-//            maxX = x1;
-//            minY = y0;
-//            maxY = y1;
-//            mLineChart.invalidate();
-//        }
-
     }
-
-
 
 }

@@ -86,7 +86,7 @@ public class DeviceStatusAdapter extends BaseAdapter {
 
         String tag = (String) mLabels[position].get("tag");
 
-        if(mValueMap != null){
+        if(mValueMap != null) {
             for (Map.Entry<String, Object> entry : mValueMap.entrySet()) {
                 if (TextUtil.isEqualIgnoreCase(entry.getKey(),tag)) {
                     String value = entry.getValue() + "";
@@ -173,14 +173,14 @@ public class DeviceStatusAdapter extends BaseAdapter {
                             }else if(value.equals("5")){
                                 value = "变频器POFF状态";
                             }
-                        } else  if(TextUtil.isEqualIgnoreCase(entry.getKey(),"bjQstatus")){
+                        } else if(TextUtil.isEqualIgnoreCase(entry.getKey(),"bjQstatus")){
                             //报警器状态
                             if(value.equals("0")){
                                 value = "正常";
                             } else if(value.equals("1")){
                                 value = "报警";
                             }
-                        } else  if(TextUtil.isEqualIgnoreCase(entry.getKey(),"kaiguan")){
+                        } else if(TextUtil.isEqualIgnoreCase(entry.getKey(),"kaiguan")){
                             //开关状态
                             if(value.equals("0")){
                                 value = "分闸";
@@ -189,7 +189,7 @@ public class DeviceStatusAdapter extends BaseAdapter {
                                 value = "合闸";
                                 viewHolder.imageView.setImageResource(R.drawable.icon_hz);
                             }
-                        } else  if(TextUtil.isEqualIgnoreCase(entry.getKey(),"Data")){
+                        } else if(TextUtil.isEqualIgnoreCase(entry.getKey(),"Data")){
                             //接触器运行状态
                             if(value.equals("1")){
                                 value = "断开";
