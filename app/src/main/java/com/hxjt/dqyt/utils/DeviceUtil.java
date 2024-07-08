@@ -117,7 +117,7 @@ public class DeviceUtil {
             case "ywcgq":return new String[]{"修改名称","删除","遥测","历史数据"};
             case "sjcgq":return new String[]{"修改名称","删除","遥测","历史数据"};
 //            case "bpq":return new String[]{"修改名称","删除","遥测","正转运行","反转运行","停机","频率设置","历史数据"};
-            case "bpq":return new String[]{"修改名称","删除","遥测","开启","关闭","频率设置","历史数据"};
+            case "bpq":return new String[]{"修改名称","删除","遥测","开启","关闭","频率设置","历史数据","历史故障"};
             case "dlq":return new String[]{"修改名称","删除","遥测","历史数据"};
             case "clzscgq":return new String[]{"修改名称","删除","遥测","历史数据"};
             case "zdjccgq":return new String[]{"修改名称","删除","遥测","历史数据"};
@@ -1074,6 +1074,70 @@ public class DeviceUtil {
         return result;
     }
 
+    /**
+     * 根据设备类型获取设备历史故障数据表标题栏
+     * @param deviceType
+     * @return
+     */
+    public static List<String> getHistoryBreakdownDataTitleByType(String deviceType){
+        List<String> result = new ArrayList<>();
+        result.add("序号");
+        switch (deviceType){
+            case "wsdcgq":
+                result.add("温度(°C)");
+                result.add("湿度(%)");
+                break;
+            case "ywcgq":
+                result.add("报警器状态");
+                result.add("报警延时");
+                break;
+            case "zdjccgq":
+                result.add("X轴振动速度");
+                result.add("Y轴振动速度");
+                result.add("Z轴振动速度");
+                result.add("X轴振动位移");
+                result.add("Y轴振动位移");
+                result.add("Z轴振动位移");
+                break;
+            case "zscgq":
+                result.add("噪声值");
+                break;
+            case "sjcgq":
+                result.add("水浸状态1");
+                result.add("水浸状态2");
+                break;
+            case "clzscgq":
+                result.add("IN1转速值");
+                result.add("IN2转速值");
+                break;
+            case "ymcsy":
+                result.add("单点套压(Mpa)");
+                result.add("单点声速(m/s)");
+                result.add("单点液面深度(m)");
+                break;
+            case "bpq":
+                result.add("故障");
+                break;
+            case "dlq":
+                break;
+            case "sk645":
+                result.add("A相电压(V)");
+                result.add("B相电压(V)");
+                result.add("C相电压(V)");
+                result.add("A相电流(A)");
+                result.add("B相电流(A)");
+                result.add("C相电流(A)");
+                result.add("总有功电能");
+                break;
+            case "jcq":
+                result.add("运行状态");
+                break;
+        }
+        result.add("创建时间");
+        result.add("操作");
+        return result;
+    }
+
 
     public static String getHistoryDataKeyByTitle(String title){
         switch (title){
@@ -1105,13 +1169,18 @@ public class DeviceUtil {
             case "瞬时无功功率(KW)":return "Zongwugonggonglv";
             case "功率因数":return "Zonggonglvyinshu";
             case "总有功电能":return "ZongYgdn";
-            case "运行状态":return "data";
+            case "运行状态":
+                if(SPUtil.hasJdq()){
+                    return "srd_3";
+                }
+                return "data";
             case "A相电压(V)":return "DqAxiangDianYa";
             case "B相电压(V)":return "DqBxiangDianYa";
             case "C相电压(V)":return "DqCxiangDianYa";
             case "A相电流(A)":return "DqAxiangDianLiu";
             case "B相电流(A)":return "DqBxiangDianLiu";
             case "C相电流(A)":return "DqCxiangDianLiu";
+            case "故障":return "BpqgzdmText";
             default:return "";
         }
     }

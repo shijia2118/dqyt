@@ -1,5 +1,6 @@
 package com.hxjt.dqyt.utils;
 
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -76,7 +77,7 @@ public class DBUtils {
     }
 
 
-    public static List<HistoryDataBean> query(int pageIndex, int pageSize, String startDt, String endDt, String deviceType) {
+    public static List<HistoryDataBean> query(int pageIndex, int pageSize, String startDt, String endDt, String deviceType, int dataType) {
         BoxStore mBoxStore = App.getBoxStore();
         if (mBoxStore == null) return new ArrayList<>();
 
@@ -104,6 +105,11 @@ public class DBUtils {
             queryBuilder.equal(HistoryDataBean_.DeviceType, deviceType, QueryBuilder.StringOrder.CASE_SENSITIVE);
         }
 
+        /**
+         * 设备状态
+         */
+        queryBuilder.equal(HistoryDataBean_.DataType, dataType);
+
         queryBuilder.orderDesc(HistoryDataBean_.id);
 
         // 构建查询
@@ -113,7 +119,7 @@ public class DBUtils {
         return query.find(offset, pageSize);
     }
 
-    public static List<HistoryDataBean> export(String deviceType) {
+    public static List<HistoryDataBean> export(String deviceType,int dataType) {
         BoxStore mBoxStore = App.getBoxStore();
         if (mBoxStore == null) return new ArrayList<>();
 
@@ -126,6 +132,11 @@ public class DBUtils {
         if (deviceType != null && !deviceType.isEmpty()) {
             queryBuilder.equal(HistoryDataBean_.DeviceType, deviceType, QueryBuilder.StringOrder.CASE_SENSITIVE);
         }
+
+        /**
+         * 设备状态
+         */
+        queryBuilder.equal(HistoryDataBean_.DataType, dataType);
 
         queryBuilder.orderDesc(HistoryDataBean_.id);
 

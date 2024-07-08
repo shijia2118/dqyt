@@ -70,6 +70,8 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
     private boolean isFz = false;
     private boolean isHz = false;
     private boolean isDq = false;
+    private boolean isOpening = false;
+    private boolean isClosing = false;
 
     private DeviceStatusAdapter statusAdapter;
 
@@ -145,9 +147,22 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
                 if(deviceCode == null) return;
 
                 if(deviceInfoBean.getDev_type().equals(JCQ) && SPUtil.hasJdq()){
+
                     String data = (String) map.get("srd_3");
 
-                    if(data!=null && !data.isEmpty()) {
+                    if(!TextUtils.isEmpty(data)) {
+
+                        hideLoading();
+
+                        String msg = getMsgByOperationType();
+                        if(msg != null){
+                            ToastUtil.s(msg);
+                        }
+                        orderToFalse();
+                        if (handler != null) {
+                            handler.removeCallbacksAndMessages(null);
+                        }
+
                         Map<String,Object> result = new HashMap<>();
                         result.put("TcpCmdType","jcq");
                         result.put("DeviceCode","100");
@@ -335,7 +350,7 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
                 } else if(buttonText.equals("读取")){
                     showLoading("正在读取...");
                     isDq = true;
-                    sendMessage("1");
+                    sendMessage_jcq();
                 } else if(buttonText.equals("分闸")){
                     onFhzHandler(0);
                 } else if(buttonText.equals("合闸")){
@@ -361,10 +376,14 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
                                 isTj = true;
                                 sendMessage_Bpq("5");
                             }).show();
-                }else if(buttonText.equals("频率设置")){
+                } else if(buttonText.equals("频率设置")){
                     showPlszDialog();
-                }else if(buttonText.equals("历史数据")){
+                } else if(buttonText.equals("历史数据")){
                     Intent intent = new Intent(this, DeviceHistoryDataActivity.class);
+                    intent.putExtra("device_info_bean",deviceInfoBean);
+                    startActivity(intent);
+                } else if(buttonText.equals("历史故障")){
+                    Intent intent = new Intent(this, DeviceHistoryBreakdownDataActivity.class);
                     intent.putExtra("device_info_bean",deviceInfoBean);
                     startActivity(intent);
                 } else if(buttonText.equals("开启")){
@@ -374,11 +393,21 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
                     sendMessage_jdq("4","0");
                     ToastUtil.s("指令下发成功");
                 } else if(buttonText.equals("工频开启")){
+                    showLoading("正在开启...");
+                    isOpening = true;
                     sendMessage_jdq("1","1");
-                    ToastUtil.s("指令下发成功");
+                    new Handler().postDelayed(() -> {
+                        sendMessage_jcq();
+                        after5sHandle();
+                    },1500);
                 } else if(buttonText.equals("工频关闭")){
+                    showLoading("正在关闭...");
+                    isClosing = true;
                     sendMessage_jdq("3","0");
-                    ToastUtil.s("指令下发成功");
+                    new Handler().postDelayed(() -> {
+                        sendMessage_jcq();
+                        after5sHandle();
+                    },1500);
                 }
             });
         }
@@ -464,6 +493,8 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
         if(isTj) return "停机成功";
         if (isYc) return "遥测成功";
         if(isDq) return "读取成功";
+        if(isOpening) return "开启成功";
+        if(isClosing) return "关闭成功";
         else return null;
     }
 
@@ -500,7 +531,6 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
         }
     }
 
-
     private void sendMessage(String cmdType,String payloadJson){
 
         if(handler != null){
@@ -525,34 +555,73 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
         }
     }
 
-    private void sendMessage_jdq(String scd,String state){
-
-        if(deviceInfoBean != null){
-            Map<String,Object> map = new HashMap<>();
-            map.put("DeviceType","bsmio");
-            map.put("DeviceCode","1");
-            map.put("CmdType","15");
-            map.put("jcqdz",null);
-
-            Map<String,Object> payloadMap = new HashMap<>();
-            payloadMap.put("scd",scd);
-            payloadMap.put("state",state);
-
-            GsonBuilder gsonBuilder = new GsonBuilder();
-            gsonBuilder.serializeNulls();
-            Gson gson = gsonBuilder.create();
-
-            String payloadJson = gson.toJson(payloadMap);
-            map.put("PayloadJson",payloadJson);
-            String jsonString = gson.toJson(map);
-
-            byte[] jsonBytes = jsonString.getBytes(StandardCharsets.UTF_8);
-            EasySocket.getInstance().upMessage(jsonBytes);
+    /**
+     * 读取状态
+     */
+    private void sendMessage_jcq(){
+        if(SPUtil.hasJdq() && deviceInfoBean.getDev_type().equals(JCQ)){
+            sendMessage_jdq("13");
+        } else {
+            sendMessage("1");
         }
     }
 
+    /**
+     * 继电器 写输出点
+     * @param scd 串口
+     * @param state 状态
+     */
+    private void sendMessage_jdq(String scd,String state){
+
+        Map<String,Object> map = new HashMap<>();
+        map.put("DeviceType","bsmio");
+        map.put("DeviceCode","1");
+        map.put("CmdType","15");
+        map.put("jcqdz",null);
+
+        Map<String,Object> payloadMap = new HashMap<>();
+        payloadMap.put("scd",scd);
+        payloadMap.put("state",state);
+
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.serializeNulls();
+        Gson gson = gsonBuilder.create();
+
+        String payloadJson = gson.toJson(payloadMap);
+        map.put("PayloadJson",payloadJson);
+        String jsonString = gson.toJson(map);
+
+        byte[] jsonBytes = jsonString.getBytes(StandardCharsets.UTF_8);
+        EasySocket.getInstance().upMessage(jsonBytes);
+    }
+
+    /**
+     * 获取状态
+     * @param cmdType 13 读输入点 14 读输出点
+     */
+    private void sendMessage_jdq(String cmdType){
+
+        if(handler != null){
+            handler.removeCallbacksAndMessages(null);
+        }
+
+        Map<String,Object> map = new HashMap<>();
+        map.put("DeviceType","bsmio");
+        map.put("DeviceCode","1");
+        map.put("CmdType",cmdType);
+        map.put("PayloadJson","");
+        map.put("jcqdz",null);
+
+        Gson gson = new Gson();
+        String jsonString = gson.toJson(map);
+
+        byte[] jsonBytes = jsonString.getBytes(StandardCharsets.UTF_8);
+
+        EasySocket.getInstance().upMessage(jsonBytes);
+    }
+
     private void orderToFalse(){
-        isFzyx = isFz = isZzyx = isHz = isTj = isYc = isDq = false;
+        isFzyx = isFz = isZzyx = isHz = isTj = isYc = isDq = isOpening = isClosing = false;
     }
 
     /**

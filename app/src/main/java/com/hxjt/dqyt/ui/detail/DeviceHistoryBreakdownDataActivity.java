@@ -12,7 +12,6 @@ import android.graphics.Typeface;
 import android.os.Environment;
 import android.os.Handler;
 import android.text.TextUtils;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -38,7 +37,6 @@ import com.github.gzuliyujiang.wheelpicker.entity.DatimeEntity;
 import com.github.gzuliyujiang.wheelpicker.widget.DatimeWheelLayout;
 import com.hxjt.dqyt.R;
 import com.hxjt.dqyt.adapter.DeviceHistoryDataAdapter;
-import com.hxjt.dqyt.app.App;
 import com.hxjt.dqyt.app.Constants;
 import com.hxjt.dqyt.base.BaseActivity;
 import com.hxjt.dqyt.base.BasePresenter;
@@ -60,16 +58,12 @@ import org.simple.eventbus.Subscriber;
 import java.io.File;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import io.objectbox.Box;
-import io.objectbox.BoxStore;
-
-public class DeviceHistoryDataActivity extends BaseActivity {
+public class DeviceHistoryBreakdownDataActivity extends BaseActivity {
 
     private DeviceHistoryDataAdapter adapter;
     private List<HistoryDataBean> dataList;
@@ -159,14 +153,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
 
         dataList = new ArrayList<>();
 
-        /************************* mock ***********************/
-//        HistoryDataBean dataBean = new HistoryDataBean();
-//        String deviceData = "{\"Id\":null,\"DeviceId\":\"FC0FE737C3B5\",\"DeviceCode\":\"2\",\"DeviceName\":\"温湿度设备\",\"CreateTime\":\"2024-06-14 13:53:57\",\"UpdateTime\":null,\"DeviceStatus\":null,\"Td\":\"3\",\"Wd\":\"26.8\",\"Sd\":\"59.2\",\"SHowzd\":\"26.8\",\"TcpCmdType\":\"wsdcgq\",\"TcpDataType\":null,\"CreateTimeStr\": \"2024-06-14 13:51:59\"}";
-//        dataBean.setDeviceData(deviceData);
-//        dataList.add(dataBean);
-        /************************* mock ***********************/
-
-        List<String> headers = DeviceUtil.getHistoryDataTitleByType(deviceInfoBean.getDev_type());
+        List<String> headers = DeviceUtil.getHistoryBreakdownDataTitleByType(deviceInfoBean.getDev_type());
         adapter = new DeviceHistoryDataAdapter(headers, dataList,context);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
@@ -204,7 +191,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
 
     private void initTableHeader(){
         LinearLayout dynamicHeader = findViewById(R.id.dynamic_header);
-        List<String> headers = DeviceUtil.getHistoryDataTitleByType(deviceInfoBean.getDev_type());
+        List<String> headers = DeviceUtil.getHistoryBreakdownDataTitleByType(deviceInfoBean.getDev_type());
         dynamicHeader.removeAllViews();
         // 动态添加标题
         for (String header : headers) {
@@ -273,7 +260,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
 
         String finalDeviceType = deviceType;
         new Thread(() -> {
-            List<HistoryDataBean> listBean = DBUtils.export(finalDeviceType,1);
+            List<HistoryDataBean> listBean = DBUtils.export(finalDeviceType,2);
 
             String fileName = "";
             String[] colName = new String[0];
@@ -522,7 +509,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
             }
             File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName);
             ExcelUtils.initExcel(file.getAbsolutePath(),fileName,colName);
-            ExcelUtils.writeObjListToExcel(listMap,file, DeviceHistoryDataActivity.this);
+            ExcelUtils.writeObjListToExcel(listMap,file, DeviceHistoryBreakdownDataActivity.this);
 
         }).start();
     }
@@ -631,7 +618,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
             deviceType = "bsmio";
         }
 
-        List<HistoryDataBean> result = DBUtils.query(currentPage,PAGESIZE,startDt,endDt,deviceType,1);
+        List<HistoryDataBean> result = DBUtils.query(currentPage,PAGESIZE,startDt,endDt,deviceType,2);
 
         if(handler != null){
             handler.removeCallbacksAndMessages(null);

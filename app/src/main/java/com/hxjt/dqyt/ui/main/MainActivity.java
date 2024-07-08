@@ -473,7 +473,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
         }
         new XPopup.Builder(MainActivity.this)
                 .dismissOnBackPressed(false) // 按返回键是否关闭弹窗，默认为true
-                .dismissOnTouchOutside(false) // 点击外部是否关闭弹窗，默认为true
+                .dismissOnTouchOutside(true) // 点击外部是否关闭弹窗，默认为true
                 .asCustom(oilGraphDialog)
                 .show();
         if (!isExpanded) {
