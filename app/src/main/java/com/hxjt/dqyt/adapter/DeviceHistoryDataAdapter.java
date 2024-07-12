@@ -1,13 +1,17 @@
 package com.hxjt.dqyt.adapter;
 
+import static com.hxjt.dqyt.app.Constants.BPQ;
+import static com.hxjt.dqyt.app.Constants.DLQ_TYPE;
+import static com.hxjt.dqyt.app.Constants.SK645;
+import static com.hxjt.dqyt.app.Constants.YM_CSY;
+
 import android.content.Context;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.ImageView;
+import android.widget.BaseAdapter;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -17,16 +21,15 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.hxjt.dqyt.R;
-import com.hxjt.dqyt.app.Constants;
 import com.hxjt.dqyt.bean.HistoryDataBean;
-import com.hxjt.dqyt.ui.main.MainActivity;
 import com.hxjt.dqyt.utils.DeviceUtil;
 import com.hxjt.dqyt.utils.JsonUtil;
+import com.hxjt.dqyt.utils.SPUtil;
 import com.hxjt.dqyt.utils.TextUtil;
 import com.lxj.xpopup.XPopup;
 import com.lxj.xpopup.core.CenterPopupView;
 
-import java.util.ArrayList;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -35,7 +38,7 @@ public class DeviceHistoryDataAdapter extends RecyclerView.Adapter<RecyclerView.
 
     private List<HistoryDataBean> dataList;
     private List<String> headers;
-    private static Context mContext;
+    private Context mContext;
 
     public DeviceHistoryDataAdapter(List<String> headers, List<HistoryDataBean> dataList,Context mContext) {
         this.headers = headers;
@@ -69,7 +72,7 @@ public class DeviceHistoryDataAdapter extends RecyclerView.Adapter<RecyclerView.
         notifyDataSetChanged();
     }
 
-    static class ItemViewHolder extends RecyclerView.ViewHolder {
+    class ItemViewHolder extends RecyclerView.ViewHolder {
         private LinearLayout itemContainer;
 
         public ItemViewHolder(@NonNull View itemView) {
@@ -101,35 +104,23 @@ public class DeviceHistoryDataAdapter extends RecyclerView.Adapter<RecyclerView.
                             mContext.getResources().getDimensionPixelSize(R.dimen.dp_50),
                             LinearLayout.LayoutParams.WRAP_CONTENT));
                     textView.setTextColor(ContextCompat.getColor(itemView.getContext(),R.color.button));
-//                    if(historyDataBean.getDeviceType().equals(Constants.JCQ)) {
-//                        textView.setOnClickListener(new View.OnClickListener() {
-//                            @Override
-//                            public void onClick(View v) {
-//                                new XPopup.Builder(mContext)
-//                                        .dismissOnBackPressed(true) // 按返回键是否关闭弹窗，默认为true
-//                                        .dismissOnTouchOutside(true) // 点击外部是否关闭弹窗，默认为true
-//                                        .asCustom(new HistoryDetailDialog(mContext))
-//                                        .show();
-//                            }
-//                        });
-//                    } else {
-//                        textView.setOnClickListener(v -> new XPopup.Builder(mContext).asConfirm(
-//                                "历史数据详情",
-//                                data.toString(),
-//                                null,
-//                                "关闭",
-//                                null,
-//                                null,
-//                                true).show());
-//                    }
-                    textView.setOnClickListener(v -> new XPopup.Builder(mContext).asConfirm(
-                            "历史数据详情",
-                            data.toString(),
-                            null,
-                            "关闭",
-                            null,
-                            null,
-                            true).show());
+                    if(historyDataBean.getDeviceType().equals("bsmio") || historyDataBean.getDeviceType().equals(SK645)
+                            || historyDataBean.getDeviceType().equals(YM_CSY) || historyDataBean.getDeviceType().equals(BPQ)) {
+                        textView.setOnClickListener(v -> new XPopup.Builder(mContext)
+                                .dismissOnBackPressed(true) // 按返回键是否关闭弹窗，默认为true
+                                .dismissOnTouchOutside(true) // 点击外部是否关闭弹窗，默认为true
+                                .asCustom(new HistoryDetailDialog(mContext,data,historyDataBean.getDeviceType()))
+                                .show());
+                    } else {
+                        textView.setOnClickListener(v -> new XPopup.Builder(mContext).asConfirm(
+                                "历史数据详情",
+                                data.toString(),
+                                null,
+                                "关闭",
+                                null,
+                                null,
+                                true).show());
+                    }
                 } else {
                     String title = DeviceUtil.getHistoryDataKeyByTitle(header);
                     String value = (String) data.get(title);
@@ -174,13 +165,16 @@ public class DeviceHistoryDataAdapter extends RecyclerView.Adapter<RecyclerView.
         }
     }
 
-    static class HistoryDetailDialog extends CenterPopupView{
+    class HistoryDetailDialog extends CenterPopupView {
 
-        private ListView historyListView;
-        private List<HistoryItem> historyItems;
+        private ListView listView;
+        private Map<String,Object> detailMap;
+        private String deviceType;
 
-        public HistoryDetailDialog(@NonNull Context context) {
+        public HistoryDetailDialog(@NonNull Context context,@NonNull Map<String,Object> detailMap,String deviceType) {
             super(context);
+            this.detailMap = detailMap;
+            this.deviceType = deviceType;
         }
 
         @Override
@@ -193,52 +187,201 @@ public class DeviceHistoryDataAdapter extends RecyclerView.Adapter<RecyclerView.
         protected void onCreate() {
             super.onCreate();
 
-            historyListView = findViewById(R.id.history_list_view);
+            listView = findViewById(R.id.tv_list_view);
+            TextView tv_title = findViewById(R.id.tv_title);
 
-            // 初始化数据
-            historyItems = new ArrayList<>();
-            historyItems.add(new HistoryItem("Title 1", "Value 1"));
-            historyItems.add(new HistoryItem("Title 2", "Value 2"));
+            String title = DeviceUtil.getNameOfType(deviceType);
+            tv_title.setText(title+"_历史数据详情");
 
-            HistoryAdapter adapter = new HistoryAdapter(mContext, historyItems);
-            historyListView.setAdapter(adapter);
+            Map<String,Object>[] mDatas = DeviceUtil.getDeviceStatusByType(deviceType);
+
+            if(deviceType.equals(SK645) && SPUtil.getString(DLQ_TYPE,"sk").equals("lc")){
+                //量测去掉"闸位状态"
+                mDatas = DeviceUtil.removeFirstElement(mDatas);
+            }
+
+            HistoryAdapter adapter = new HistoryAdapter(mContext, mDatas, detailMap);
+            listView.setDivider(null);
+            listView.setAdapter(adapter);
         }
     }
 
-    private static class HistoryItem {
-        String title;
-        String value;
+    public static class HistoryAdapter extends BaseAdapter {
 
-        HistoryItem(String title, String value) {
-            this.title = title;
-            this.value = value;
-        }
-    }
+        private Context context;
+        private Map<String,Object> detailMap;
+        private final Map<String,Object>[] mDatas;
 
-    private static class HistoryAdapter extends ArrayAdapter<HistoryItem> {
-
-        public HistoryAdapter(Context context, List<HistoryItem> objects) {
-            super(context, 0, objects);
+        public HistoryAdapter(Context context, Map<String,Object>[] mDatas,Map<String,Object> detailMap) {
+            this.context = context;
+            this.mDatas = mDatas;
+            this.detailMap = detailMap;
         }
 
-        @NonNull
+        @Override
+        public int getCount() {
+            return mDatas.length;
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return mDatas[position];
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             if (convertView == null) {
-                convertView = LayoutInflater.from(getContext()).inflate(R.layout.history_detail_item, parent, false);
+                convertView = LayoutInflater.from(context).inflate(R.layout.history_detail_item, parent, false);
             }
 
-            HistoryItem currentItem = getItem(position);
+            Map<String,Object> map = mDatas[position];
+            String title = (String) map.get("title");
+            String tag = (String) map.get("tag");
 
+            if(title==null) title = "";
+            if(tag == null) tag = "";
+
+            LinearLayout ll_item = convertView.findViewById(R.id.ll_item);
             TextView titleTextView = convertView.findViewById(R.id.title);
             TextView valueTextView = convertView.findViewById(R.id.value);
 
-            titleTextView.setText(currentItem.title);
-            valueTextView.setText(currentItem.value);
+            boolean isEven = position% 2 == 0;
+
+            ll_item.setBackgroundColor(
+                    isEven ? context.getResources().getColor(R.color.button)
+                            : context.getResources().getColor(R.color.button3));
+
+            titleTextView.setText(title);
+
+            for (Map.Entry<String, Object> entry : detailMap.entrySet()) {
+                if (TextUtil.isEqualIgnoreCase(entry.getKey(),tag)) {
+                    String result = entry.getValue() + "";
+                    if(result.equals("串口控制继电器")){
+                        result = "接触器";
+                    }
+                    if(TextUtil.isEqualIgnoreCase(entry.getKey(),"deviceStatus")){
+                        //在线状态
+                        if(result.equals("1")){
+                            result = "在线";
+                        } else {
+                            result = "离线";
+                        }
+                    } else if(TextUtil.isEqualIgnoreCase(entry.getKey(),"sjStatus1")){
+                        //水浸状态1
+                        if(result.equals("0")){
+                            result = "正常";
+                        } else if(result.equals("1")){
+                            result = "有水";
+                        }
+                    } else if(TextUtil.isEqualIgnoreCase(entry.getKey(),"sjStatus2")){
+                        //水浸状态2
+                        if(result.equals("0")){
+                            result = "正常";
+                        } else if(result.equals("1")){
+                            result = "有水";
+                        }
+                    } else if(TextUtil.isEqualIgnoreCase(entry.getKey(),"bsStatus")){
+                        //闭锁状态
+                        if(result.equals("1")){
+                            result = "闭锁";
+                        } else if(result.equals("0")){
+                            result = "解锁";
+                        }
+                    } else if(TextUtil.isEqualIgnoreCase(entry.getKey(),"iN1Clsd")||TextUtil.isEqualIgnoreCase(entry.getKey(),"iN2Clsd")){
+                        //IN1,IN2 测量速度选择
+                        if(result.equals("0")){
+                            result = "高速";
+                        } else if(result.equals("1")){
+                            result = "中速";
+                        }else if(result.equals("2")){
+                            result = "低速";
+                        }
+                    } else if(TextUtil.isEqualIgnoreCase(entry.getKey(),"yxStatus")){
+                        //运行状态
+                        BigDecimal bd = new BigDecimal(result);
+                        int intValue = bd.intValue();
+                        if(intValue == 1){
+                            result = "正转运行";
+                        } else if(intValue== 2){
+                            result = "反转运行";
+                        }else if(intValue == 3){
+                            result = "正转点动";
+                        }else if(intValue == 4){
+                            result = "反转点动";
+                        }else if(intValue == 5){
+                            result = "停机";
+                        }else if(intValue == 6){
+                            result = "紧急停机";
+                        }else if(intValue == 7){
+                            result = "故障复位";
+                        }else if(intValue == 8){
+                            result = "点动停止";
+                        }
+                    } else if(TextUtil.isEqualIgnoreCase(entry.getKey(),"jsff")){
+                        //IN1,IN2 测量速度选择
+                        if(result.equals("1")){
+                            result = "接箍法";
+                        } else if(result.equals("2")){
+                            result = "音速法";
+                        }else if(result.equals("3")){
+                            result = "音标法";
+                        }
+                    } else if(TextUtil.isEqualIgnoreCase(entry.getKey(),"bpqZtz1") || TextUtil.isEqualIgnoreCase(entry.getKey(),"bpqZtz2")){
+                        //运行状态
+                        if(result.equals("1")){
+                            result = "正转运行中";
+                        } else if(result.equals("2")){
+                            result = "反转运行中";
+                        }else if(result.equals("3")){
+                            result = "变频器停机中";
+                        }else if(result.equals("4")){
+                            result = "变频器故障中 ";
+                        }else if(result.equals("5")){
+                            result = "变频器POFF状态";
+                        }
+                    } else if(TextUtil.isEqualIgnoreCase(entry.getKey(),"bjQstatus")){
+                        //报警器状态
+                        if(result.equals("0")){
+                            result = "正常";
+                        } else if(result.equals("1")){
+                            result = "报警";
+                        }
+                    } else if(TextUtil.isEqualIgnoreCase(entry.getKey(),"kaiguan")){
+                        //开关状态
+                        if(result.equals("0")){
+                            result = "分闸";
+                        } else if(result.equals("1")){
+                            result = "合闸";
+                        }
+                    } else if(TextUtil.isEqualIgnoreCase(entry.getKey(),"Data")){
+                        //接触器运行状态
+                        if(result.equals("1")){
+                            result = "断开";
+                        } else if(result.equals("0")){
+                            result = "运行";
+                        }
+                    } else if(TextUtil.isEqualIgnoreCase(entry.getKey(),"srd_3")){
+                        //接触器运行状态
+                        if(result.equals("1")){
+                            result = "运行";
+                        } else if(result.equals("0")){
+                            result = "断开";
+                        }
+                    }
+                    valueTextView.setText(result);
+                    break;
+                }
+            }
 
             return convertView;
         }
     }
+
 }
 
 

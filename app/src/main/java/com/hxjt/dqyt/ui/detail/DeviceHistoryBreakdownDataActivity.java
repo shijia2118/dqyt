@@ -360,7 +360,7 @@ public class DeviceHistoryBreakdownDataActivity extends BaseActivity {
                 }
             } else if(finalDeviceType.equals(Constants.SK645)){
                 fileName = "塑壳_"+timestamp+".xlsx";
-                colName = new String[]{"序号", "A相电压(V)","B相电压(V)","C相电压(V)", "A相电流(A)","B相电流(A)","B相电流(A)","总有功电能","创建时间"};
+                colName = new String[]{"序号", "A相电压(V)","B相电压(V)","C相电压(V)", "A相电流(A)","B相电流(A)","B相电流(A)","创建时间"};
                 for(int i=1; i<= listBean.size();i++){
                     Map<String,Object> map = JsonUtil.toMap(listBean.get(i-1).getDeviceData());
                     if(map != null && !map.isEmpty()){
@@ -378,32 +378,20 @@ public class DeviceHistoryBreakdownDataActivity extends BaseActivity {
                         rowMap.put("bxdl",bxdl);
                         String cxdl = (String) map.get("DqCxiangDianLiu");
                         rowMap.put("cxdl",cxdl);
-                        String zongYgdn = (String) map.get("ZongYgdn");
-                        rowMap.put("zongYgdn",zongYgdn);
                         rowMap.put("time",listBean.get(i-1).getCreateTimeStr());
                         listMap.add(rowMap);
                     }
                 }
             } else if(finalDeviceType.equals(Constants.BPQ)){
                 fileName = "变频器_"+timestamp+".xlsx";
-                colName = new String[]{"序号", "运行频率","设定频率","运行转速","输出电压","输出电流","输出功率",  "创建时间"};
+                colName = new String[]{"序号", "故障", "创建时间"};
                 for(int i=1; i<= listBean.size();i++){
                     Map<String,Object> map = JsonUtil.toMap(listBean.get(i-1).getDeviceData());
                     if(map != null && !map.isEmpty()){
                         Map<String,Object> rowMap = new LinkedHashMap<>();
                         rowMap.put("xlh",""+i);
-                        String yxpl = (String) map.get("Yxpl");
-                        rowMap.put("yxpl",yxpl);
-                        String sdpl = (String) map.get("Sdpl");
-                        rowMap.put("sdpl",sdpl);
-                        String yxzs = (String) map.get("Yxzs");
-                        rowMap.put("yxzs",yxzs);
-                        String scdy = (String) map.get("Scdy");
-                        rowMap.put("scdy",scdy);
-                        String scdl = (String) map.get("Scdl");
-                        rowMap.put("scdl",scdl);
-                        String scgl = (String) map.get("Scgl");
-                        rowMap.put("scgl",scgl);
+                        String bpqgzdmText = (String) map.get("BpqgzdmText");
+                        rowMap.put("BpqgzdmText",bpqgzdmText);
                         rowMap.put("time",listBean.get(i-1).getCreateTimeStr());
                         listMap.add(rowMap);
                     }

@@ -3,14 +3,22 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="@dimen/dp_10"
+    android:layout_marginVertical="@dimen/dp_35"
     android:background="@drawable/shape_white_bg">
 
-    <ListView
-        android:id="@+id/history_list_view"
+    <TextView
+        android:id="@+id/tv_title"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:divider="@android:color/darker_gray"
-        android:dividerHeight="1dp" />
+        android:layout_height="@dimen/dp_50"
+        android:textColor="@color/black"
+        android:textSize="@dimen/sp_14"
+        android:gravity="center"
+        android:textStyle="bold"/>
+
+    <ListView
+        android:id="@+id/tv_list_view"
+        android:layout_marginBottom="@dimen/dp_20"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 
 </LinearLayout>

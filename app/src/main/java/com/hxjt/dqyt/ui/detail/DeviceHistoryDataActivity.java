@@ -38,7 +38,6 @@ import com.github.gzuliyujiang.wheelpicker.entity.DatimeEntity;
 import com.github.gzuliyujiang.wheelpicker.widget.DatimeWheelLayout;
 import com.hxjt.dqyt.R;
 import com.hxjt.dqyt.adapter.DeviceHistoryDataAdapter;
-import com.hxjt.dqyt.app.App;
 import com.hxjt.dqyt.app.Constants;
 import com.hxjt.dqyt.base.BaseActivity;
 import com.hxjt.dqyt.base.BasePresenter;
@@ -60,14 +59,10 @@ import org.simple.eventbus.Subscriber;
 import java.io.File;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import io.objectbox.Box;
-import io.objectbox.BoxStore;
 
 public class DeviceHistoryDataActivity extends BaseActivity {
 
@@ -373,7 +368,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
                 }
             } else if(finalDeviceType.equals(Constants.SK645)){
                 fileName = "塑壳_"+timestamp+".xlsx";
-                colName = new String[]{"序号", "A相电压(V)","B相电压(V)","C相电压(V)", "A相电流(A)","B相电流(A)","B相电流(A)","总有功电能","创建时间"};
+                colName = new String[]{"序号", "A相电压(V)","B相电压(V)","C相电压(V)", "A相电流(A)","B相电流(A)","B相电流(A)","创建时间"};
                 for(int i=1; i<= listBean.size();i++){
                     Map<String,Object> map = JsonUtil.toMap(listBean.get(i-1).getDeviceData());
                     if(map != null && !map.isEmpty()){
@@ -391,8 +386,6 @@ public class DeviceHistoryDataActivity extends BaseActivity {
                         rowMap.put("bxdl",bxdl);
                         String cxdl = (String) map.get("DqCxiangDianLiu");
                         rowMap.put("cxdl",cxdl);
-                        String zongYgdn = (String) map.get("ZongYgdn");
-                        rowMap.put("zongYgdn",zongYgdn);
                         rowMap.put("time",listBean.get(i-1).getCreateTimeStr());
                         listMap.add(rowMap);
                     }

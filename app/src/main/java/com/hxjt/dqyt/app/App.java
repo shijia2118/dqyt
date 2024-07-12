@@ -7,10 +7,14 @@ import static com.hxjt.dqyt.app.Constants.IP_ADDRESS;
 import static com.hxjt.dqyt.app.Constants.PORT;
 import static com.hxjt.dqyt.app.Constants.RECEIVED_MESSAGE;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
+import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.multidex.MultiDex;
 
 import com.easysocket.EasySocket;
@@ -57,6 +61,28 @@ public class App extends BaseApplication {
             Log.e("====start=======",start+"");
         }
         Log.d("App===", "Using ObjectBox " + BoxStore.getVersion() + " (" + BoxStore.getVersionNative() + ")");
+
+        // 注册一个全局的 Activity 生命周期回调
+        registerActivityLifecycleCallbacks(new ActivityLifecycleCallbacks() {
+            @Override
+            public void onActivityCreated(@NonNull Activity activity, Bundle savedInstanceState) {
+                // 每次 Activity 被创建时，强制设置为横屏
+                activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+            }
+
+            @Override
+            public void onActivityStarted(@NonNull Activity activity) {}
+            @Override
+            public void onActivityResumed(@NonNull Activity activity) {}
+            @Override
+            public void onActivityPaused(@NonNull Activity activity) {}
+            @Override
+            public void onActivityStopped(@NonNull Activity activity) {}
+            @Override
+            public void onActivitySaveInstanceState(@NonNull Activity activity, @NonNull Bundle outState) {}
+            @Override
+            public void onActivityDestroyed(@NonNull Activity activity) {}
+        });
 
     }
 

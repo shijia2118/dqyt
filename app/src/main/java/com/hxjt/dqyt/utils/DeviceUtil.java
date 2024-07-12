@@ -90,17 +90,19 @@ public class DeviceUtil {
      */
     public static String getNameOfType(String type){
         switch (type){
-            case "wsdcgq":return "温湿度\n传感器";
-            case "zscgq":return "噪声\n传感器";
-            case "ywcgq":return "烟雾\n传感器";
-            case "sjcgq":return "水浸\n变送器";
+            case "wsdcgq":return "温湿度传感器";
+            case "zscgq":return "噪声传感器";
+            case "ywcgq":return "烟雾传感器";
+            case "sjcgq":return "水浸变送器";
             case "bpq":return "变频器";
 //            case "dlq":return "断路器";
-            case "clzscgq":return "齿轮转速\n传感器";
-            case "zdjccgq":return "震动监测\n传感器";
-            case "ymcsy":return "液面\n测试仪";
+            case "clzscgq":return "齿轮转速传感器";
+            case "zdjccgq":return "震动监测传感器";
+            case "ymcsy":return "液面测试仪";
             case "sk645":return "塑壳645";
-            case "jcq":return "工频接触器";
+            case "jcq":
+            case "bsmio":
+                return "工频接触器";
             default:return "";
         }
     }
@@ -871,7 +873,7 @@ public class DeviceUtil {
                 dlqArray[68].put("tag", "zongdianliangLast");
                 return dlqArray;
             case "sk645":
-                Map<String, Object>[] sk645Array = new HashMap[20];
+                Map<String, Object>[] sk645Array = new HashMap[19];
                 sk645Array[0] = new HashMap<>();
                 sk645Array[0].put("title", "闸位状态");
                 sk645Array[0].put("resource_id", R.drawable.icon_normal);
@@ -966,12 +968,6 @@ public class DeviceUtil {
                 sk645Array[18].put("title", "C相功率因数");
                 sk645Array[18].put("resource_id", R.drawable.icon_glys);
                 sk645Array[18].put("tag", "CxiangGongLvYinShu");
-
-                sk645Array[19] = new HashMap<>();
-                sk645Array[19].put("title", "总有功电能");
-                sk645Array[19].put("resource_id", R.drawable.icon_total_electricity);
-                sk645Array[19].put("tag", "ZongYgdn");
-
                 return sk645Array;
 
             case "jcq":
@@ -981,6 +977,13 @@ public class DeviceUtil {
                 jcqArray[0].put("resource_id", R.drawable.icon_ddty);
                 jcqArray[0].put("tag", "Data");
                 return jcqArray;
+            case "bsmio":
+                Map<String, Object>[] bsmioArray = new HashMap[1];
+                bsmioArray[0] = new HashMap<>();
+                bsmioArray[0].put("title", "运行状态");
+                bsmioArray[0].put("resource_id", R.drawable.icon_ddty);
+                bsmioArray[0].put("tag", "srd_3");
+                return bsmioArray;
 
             default:return new HashMap[0];
         }
@@ -1063,7 +1066,6 @@ public class DeviceUtil {
                 result.add("A相电流(A)");
                 result.add("B相电流(A)");
                 result.add("C相电流(A)");
-                result.add("总有功电能");
                 break;
             case "jcq":
                 result.add("运行状态");
@@ -1127,14 +1129,12 @@ public class DeviceUtil {
                 result.add("A相电流(A)");
                 result.add("B相电流(A)");
                 result.add("C相电流(A)");
-                result.add("总有功电能");
                 break;
             case "jcq":
                 result.add("运行状态");
                 break;
         }
         result.add("创建时间");
-        result.add("操作");
         return result;
     }
 
@@ -1168,7 +1168,6 @@ public class DeviceUtil {
             case "瞬时有功功率(KW)":return "SsZongYouGongLv";
             case "瞬时无功功率(KW)":return "Zongwugonggonglv";
             case "功率因数":return "Zonggonglvyinshu";
-            case "总有功电能":return "ZongYgdn";
             case "运行状态":
                 if(SPUtil.hasJdq()){
                     return "srd_3";
@@ -1184,6 +1183,5 @@ public class DeviceUtil {
             default:return "";
         }
     }
-
 
 }
