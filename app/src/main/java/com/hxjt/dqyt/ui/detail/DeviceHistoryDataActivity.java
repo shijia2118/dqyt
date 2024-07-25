@@ -268,7 +268,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
 
         String finalDeviceType = deviceType;
         new Thread(() -> {
-            List<HistoryDataBean> listBean = DBUtils.export(finalDeviceType,1);
+            List<HistoryDataBean> listBean = DBUtils.export(finalDeviceType,null,null,1);
 
             String fileName = "";
             String[] colName = new String[0];
@@ -614,7 +614,7 @@ public class DeviceHistoryDataActivity extends BaseActivity {
 
 
     /**
-     * 下发指令，获取历史数据
+     * 从本地数据库中获取历史数据
      */
     private void getDeviceHistoryDataList() {
         String deviceType = deviceInfoBean.getDev_type();

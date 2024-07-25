@@ -260,7 +260,7 @@ public class DeviceHistoryBreakdownDataActivity extends BaseActivity {
 
         String finalDeviceType = deviceType;
         new Thread(() -> {
-            List<HistoryDataBean> listBean = DBUtils.export(finalDeviceType,2);
+            List<HistoryDataBean> listBean = DBUtils.export(finalDeviceType,null,null,2);
 
             String fileName = "";
             String[] colName = new String[0];

@@ -1,6 +1,10 @@
 package com.hxjt.dqyt.ui.main;
 
 import static com.hxjt.dqyt.app.Constants.CONNECTION_CHANGED;
+import static com.hxjt.dqyt.app.Constants.MockF;
+import static com.hxjt.dqyt.app.Constants.MockI;
+import static com.hxjt.dqyt.app.Constants.MockS;
+import static com.hxjt.dqyt.app.Constants.MockWatt;
 import static com.hxjt.dqyt.app.Constants.RECEIVED_MESSAGE;
 
 import android.annotation.SuppressLint;
@@ -39,7 +43,11 @@ import com.hxjt.dqyt.app.Constants;
 import com.hxjt.dqyt.base.BaseActivity;
 import com.hxjt.dqyt.bean.DeviceInfoBean;
 import com.hxjt.dqyt.bean.DeviceInfoListBean;
+import com.hxjt.dqyt.bean.HistoryDataBean;
 import com.hxjt.dqyt.ui.system.SystemSetActivity;
+import com.hxjt.dqyt.ui.widget.MyMarkerView;
+import com.hxjt.dqyt.utils.DBUtils;
+import com.hxjt.dqyt.utils.DataUtils;
 import com.hxjt.dqyt.utils.JsonUtil;
 import com.hxjt.dqyt.utils.SPUtil;
 import com.hxjt.dqyt.utils.TcpUtil;
@@ -51,6 +59,7 @@ import com.lxj.xpopup.core.CenterPopupView;
 import org.simple.eventbus.EventBus;
 import org.simple.eventbus.Subscriber;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -221,8 +230,6 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
 
         if(cmdType == null) return;
 
-        String zbd = (String) map.get("Zbd");
-
         if(cmdType.equals("103")){
             //说明是 设备列表接口
             hideLoading();
@@ -298,10 +305,6 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
                     }
                 }
             }
-        } else if(!TextUtils.isEmpty(zbd) && oilGraphDialog != null){
-            //抽油机数据统计表
-            points = JsonUtil.parseJsonToMapList(zbd);
-            oilGraphDialog.setData();
         } else if(SPUtil.hasJdq() && cmdType.equals("bsmio")){
             //外接变频器
             for(DeviceInfoBean infoBean : mDevices){
@@ -473,7 +476,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
         }
         new XPopup.Builder(MainActivity.this)
                 .dismissOnBackPressed(false) // 按返回键是否关闭弹窗，默认为true
-                .dismissOnTouchOutside(true) // 点击外部是否关闭弹窗，默认为true
+                .dismissOnTouchOutside(false) // 点击外部是否关闭弹窗，默认为true
                 .asCustom(oilGraphDialog)
                 .show();
         if (!isExpanded) {
@@ -527,174 +530,213 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
                 .into(imageView);
     }
 
-    class OilGraphDialog extends CenterPopupView {
+    public class OilGraphDialog extends CenterPopupView {
 
-        private TextView tv_x_unit;
-        private TextView tv_y_unit;
+        private LineChart mLineChart;
+        private TextView tv_zh;
+        private TextView tv_dl;
+        private TextView tv_gl;
 
-        //注意：自定义弹窗本质是一个自定义View，但是只需重写一个参数的构造，其他的不要重写，所有的自定义弹窗都是这样。
+        double[] S;
+        double[] F;
+        double[] I;
+        double[] Watt;
+
         public OilGraphDialog(@NonNull Context context) {
             super(context);
         }
 
-        // 返回自定义弹窗的布局
         @Override
         protected int getImplLayoutId() {
             return R.layout.oid_graph_dialog;
         }
 
-        // 执行初始化操作，比如：findView，设置点击，或者任何你弹窗内的业务逻辑
         @Override
         protected void onCreate() {
             super.onCreate();
 
-            ImageView iv_close = findViewById(R.id.iv_close);
+            LinearLayout ll_close = findViewById(R.id.ll_close);
+            tv_zh = findViewById(R.id.tv_zh);
+            tv_dl = findViewById(R.id.tv_dl);
+            tv_gl = findViewById(R.id.tv_gl);
+
+            tv_zh.setOnClickListener(this::onSwitch);
+            tv_dl.setOnClickListener(this::onSwitch);
+            tv_gl.setOnClickListener(this::onSwitch);
+
             mLineChart = findViewById(R.id.lc_chart);
-            tv_x_unit = findViewById(R.id.tv_x_unit);
-            tv_y_unit = findViewById(R.id.tv_y_unit);
 
-            iv_close.setOnClickListener(v -> {
-                dismiss();
+            MyMarkerView mv = new MyMarkerView(getContext(), "载荷");
+            mv.setChartView(mLineChart);
+            mLineChart.setMarker(mv);
+
+            ll_close.setOnClickListener(v -> {
                 oilGraphDialog = null;
+                dismiss();
             });
-            //mock
-//            points.add(new HashMap() {{ put("a_x", 0.0); put("a_y", 48.17); }});
-//            points.add(new HashMap() {{ put("b_x", 0.54); put("b_y", 50.19); }});
-//            points.add(new HashMap() {{ put("c_x", 3.0); put("c_y", 50.19); }});
-//            points.add(new HashMap() {{ put("d_x", 2.46); put("d_y", 48.17); }});
 
-            setData();
-        }
-
-        public void setData() {
-            if (points == null || points.isEmpty()) {
-                tv_x_unit.setVisibility(GONE);
-                tv_y_unit.setVisibility(GONE);
-                mLineChart.setNoDataText("暂无数据");
-                mLineChart.clear(); // 清除任何现有数据
-                mLineChart.invalidate(); // 刷新图表
-                return;
-            }
-            // 创建所有点的 Entry 列表
-            tv_x_unit.setVisibility(VISIBLE);
-            tv_y_unit.setVisibility(VISIBLE);
-            List<Entry> allEntries = new ArrayList<>();
-            for (Map<String, Double> map : points) {
-                for (Map.Entry<String, Double> entry : map.entrySet()) {
-                    if (entry.getKey().endsWith("_x")) {
-                        String keyPrefix = entry.getKey().substring(0, entry.getKey().indexOf('_'));
-                        Double x0 = entry.getValue();
-                        Double y0 = map.get(keyPrefix + "_y");
-
-                        if (x0 == null || y0 == null) {
-                            return;
+            //从本地数据库取出最新1条数据
+            List<HistoryDataBean> result = DBUtils.query(1,1,null,null,"djjshz",1);
+            if(!result.isEmpty()){
+                HistoryDataBean dataBean = result.get(0);
+                Map<String,Object> deviceData = JsonUtil.toMap(dataBean.getDeviceData());
+                if(deviceData != null){
+                    String content = (String) deviceData.get("Content");
+                    if(content != null && !content.isEmpty()){
+                        Map<String,Object> contentMap = JsonUtil.toMap(content);
+                        if(contentMap != null){
+                            Object sObj = contentMap.get("S");
+                            if(sObj instanceof ArrayList){
+                                S = DataUtils.convertToDoubleArray((ArrayList<?>) sObj);
+                            }
+                            Object fObj = contentMap.get("F");
+                            if(fObj instanceof ArrayList){
+                                F = DataUtils.convertToDoubleArray((ArrayList<?>) fObj);
+                            }
+                            Object iObj = contentMap.get("I");
+                            if(iObj instanceof ArrayList){
+                                I = DataUtils.convertToDoubleArray((ArrayList<?>) iObj);
+                            }
+                            Object wattObj = contentMap.get("Watt");
+                            if(wattObj instanceof ArrayList){
+                                Watt = DataUtils.convertToDoubleArray((ArrayList<?>) wattObj);
+                            }
+                            setData(S,F);
                         }
-                        double x = x0;
-                        double y = y0;
-
-                        allEntries.add(new Entry((float) x, (float) y));
                     }
                 }
             }
 
-            if(allEntries.size() != 4) return;
+            //mock data
+//            double[] S = MockS;
+//            double[] F = MockF;
+//            setData(S, F);
+        }
 
-            List<Entry> maxEntries = new ArrayList<>();
-            List<Entry> minEntries = new ArrayList<>();
+        @SuppressLint("UseCompatLoadingForDrawables")
+        private void onSwitch(View v){
+            if(v.getId() == R.id.tv_zh){
+                tv_zh.setTextColor(getResources().getColor(R.color.white));
+                tv_zh.setBackground(getResources().getDrawable(R.drawable.shape_btn_bg_5));
 
-            maxEntries.add(allEntries.get(0));
-            maxEntries.add(allEntries.get(1));
-            maxEntries.add(allEntries.get(2));
+                tv_dl.setTextColor(getResources().getColor(R.color.black));
+                tv_dl.setBackground(getResources().getDrawable(R.drawable.btn_border));
 
-            minEntries.add(allEntries.get(0));
-            minEntries.add(allEntries.get(3));
-            minEntries.add(allEntries.get(2));
+                tv_gl.setTextColor(getResources().getColor(R.color.black));
+                tv_gl.setBackground(getResources().getDrawable(R.drawable.btn_border));
 
-            // 创建最大值的数据集
-            LineDataSet maxDataSet = new LineDataSet(maxEntries, "最大值");
-            maxDataSet.setColor(Color.RED);
-            maxDataSet.setValueTextColor(Color.RED);
-            maxDataSet.setValueTextSize(14);
-            maxDataSet.setMode(LineDataSet.Mode.LINEAR);
-            maxDataSet.setDrawValues(true);
-            maxDataSet.setDrawCircles(true);
-            maxDataSet.setCircleColor(Color.RED);
+                setData(S,F);
 
-            // 创建最小值的数据集
-            LineDataSet minDataSet = new LineDataSet(minEntries, "最小值");
-            minDataSet.setColor(Color.BLACK);
-            minDataSet.setValueTextColor(Color.BLACK);
-            minDataSet.setValueTextSize(14);
-            minDataSet.setMode(LineDataSet.Mode.LINEAR);
-            minDataSet.setDrawValues(true);
-            minDataSet.setDrawCircles(true);
-            minDataSet.setCircleColor(Color.BLACK);
+            } else if(v.getId() == R.id.tv_dl){
+                tv_dl.setTextColor(getResources().getColor(R.color.white));
+                tv_dl.setBackground(getResources().getDrawable(R.drawable.shape_btn_bg_5));
 
-            // 创建 LineData 对象并设置数据集
-            LineData lineData = new LineData();
-            lineData.addDataSet(maxDataSet);
-            lineData.addDataSet(minDataSet);
+                tv_zh.setTextColor(getResources().getColor(R.color.black));
+                tv_zh.setBackground(getResources().getDrawable(R.drawable.btn_border));
+
+                tv_gl.setTextColor(getResources().getColor(R.color.black));
+                tv_gl.setBackground(getResources().getDrawable(R.drawable.btn_border));
+
+                setData(S,I);
+
+            } else if(v.getId() == R.id.tv_gl){
+                tv_gl.setTextColor(getResources().getColor(R.color.white));
+                tv_gl.setBackground(getResources().getDrawable(R.drawable.shape_btn_bg_5));
+
+                tv_zh.setTextColor(getResources().getColor(R.color.black));
+                tv_zh.setBackground(getResources().getDrawable(R.drawable.btn_border));
+
+                tv_dl.setTextColor(getResources().getColor(R.color.black));
+                tv_dl.setBackground(getResources().getDrawable(R.drawable.btn_border));
+
+                setData(S,Watt);
+            }
+        }
+
+        public void setData(double[] x, double[] y) {
+
+            if (x == null || y == null || x.length != y.length || x.length == 0) {
+                mLineChart.setNoDataText("暂无数据");
+                mLineChart.clear();
+                mLineChart.invalidate();
+                return;
+            }
+
+            //S的最大值索引
+            int maxValueIndex = DataUtils.findMaxIndexFromArray(x);
+
+            double[] x1 = new double[maxValueIndex + 1];
+            double[] x2 = new double[x.length - maxValueIndex];
+
+            double[] y1 = new double[maxValueIndex + 1];
+            double[] y2 = new double[y.length - maxValueIndex];
+
+
+            System.arraycopy(x,0,x1,0,maxValueIndex+1);
+            System.arraycopy(x, maxValueIndex, x2, 0, x.length - maxValueIndex);
+            DataUtils.reverseArray(x2);
+
+            System.arraycopy(y,0,y1,0,maxValueIndex+1);
+            System.arraycopy(y, maxValueIndex, y2, 0, y.length - maxValueIndex);
+            DataUtils.reverseArray(y2);
+
+            if(x1.length != y1.length || x2.length != y2.length) return;
+
+            List<Entry> entries1 = new ArrayList<>();
+            for (int i = 0; i < x1.length; i++) {
+                entries1.add(new Entry((float) x1[i], (float) y1[i]));
+            }
+
+            LineDataSet dataSet1 = new LineDataSet(entries1, "");
+            dataSet1.setColor(Color.BLUE);
+            dataSet1.setValueTextSize(14);
+            dataSet1.setMode(LineDataSet.Mode.LINEAR);
+            dataSet1.setDrawValues(true);
+            dataSet1.setDrawCircles(false);
+
+            List<Entry> entries2 = new ArrayList<>();
+            for (int i = 0; i < x2.length; i++) {
+                entries2.add(new Entry((float) x2[i], (float) (y2[i]))); // Example data for second line
+            }
+
+            LineDataSet dataSet2 = new LineDataSet(entries2,"");
+            dataSet2.setColor(Color.RED);
+            dataSet2.setValueTextSize(14);
+            dataSet2.setMode(LineDataSet.Mode.LINEAR);
+            dataSet2.setDrawValues(true);
+            dataSet2.setDrawCircles(false);
+
+            LineData lineData = new LineData(dataSet1, dataSet2);
             mLineChart.setData(lineData);
+
+            // 添加动画效果
+            mLineChart.animateXY(1000, 0);
 
             // X轴设置
             XAxis xAxis = mLineChart.getXAxis();
-            xAxis.setPosition(XAxis.XAxisPosition.BOTTOM); // X轴显示在底部
+            xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
             xAxis.setTextSize(14);
-            xAxis.setGranularity(1f); // 设置最小间隔为1，防止标签的重叠
-            xAxis.setLabelCount(points.size(), true); // 设置标签数量与数据点数量一致
+            xAxis.setLabelCount(10, true);
+            xAxis.setDrawGridLines(true);
 
             // Y轴设置
             YAxis rightAxis = mLineChart.getAxisRight();
-            rightAxis.setEnabled(false); // 右侧Y轴禁用
+            rightAxis.setEnabled(false);
 
             YAxis leftAxis = mLineChart.getAxisLeft();
             leftAxis.setTextSize(14);
+            leftAxis.setDrawGridLines(true);
 
             // 设置图例
             Legend legend = mLineChart.getLegend();
-            legend.setForm(Legend.LegendForm.CIRCLE);
-            legend.setTextColor(Color.BLACK);
+            legend.setEnabled(false);
+
+            mLineChart.getDescription().setEnabled(false);
 
             // 刷新图表
             mLineChart.invalidate();
         }
-
-        // 设置最大宽度，看需要而定，
-        @Override
-        protected int getMaxWidth() {
-            return super.getMaxWidth();
-        }
-
-        // 设置最大高度，看需要而定
-        @Override
-        protected int getMaxHeight() {
-            return super.getMaxHeight();
-        }
-
-        // 设置自定义动画器，看需要而定
-        @Override
-        protected PopupAnimator getPopupAnimator() {
-            return super.getPopupAnimator();
-        }
-
-        /**
-         * 弹窗的宽度，用来动态设定当前弹窗的宽度，受getMaxWidth()限制
-         *
-         * @return
-         */
-        protected int getPopupWidth() {
-            return 0;
-        }
-
-        /**
-         * 弹窗的高度，用来动态设定当前弹窗的高度，受getMaxHeight()限制
-         *
-         * @return
-         */
-        protected int getPopupHeight() {
-            return 0;
-        }
-
     }
+
 
 }

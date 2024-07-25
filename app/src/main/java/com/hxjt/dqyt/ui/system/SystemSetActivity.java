@@ -3,14 +3,20 @@ package com.hxjt.dqyt.ui.system;
 
 import static com.hxjt.dqyt.app.Constants.CONNECTION_CHANGED;
 import static com.hxjt.dqyt.app.Constants.IP_ADDRESS;
+import static com.hxjt.dqyt.app.Constants.JCQ;
 import static com.hxjt.dqyt.app.Constants.PORT;
 import static com.hxjt.dqyt.app.Constants.RECEIVED_MESSAGE;
 import static com.hxjt.dqyt.app.Constants.STATIC_IP;
 import static com.hxjt.dqyt.app.Constants.WANG_GUAN_CODE;
+import static com.hxjt.dqyt.utils.TimeUtils.formatWithLeadingZero;
+import static com.hxjt.dqyt.utils.TimeUtils.getDateTimeEntity;
 
+import android.Manifest;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Environment;
 import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Log;
@@ -28,35 +34,59 @@ import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import com.easysocket.EasySocket;
 import com.easysocket.entity.SocketAddress;
 import com.easysocket.interfaces.conn.IConnectionManager;
+import com.github.gzuliyujiang.wheelpicker.DatimePicker;
+import com.github.gzuliyujiang.wheelpicker.annotation.DateMode;
+import com.github.gzuliyujiang.wheelpicker.annotation.TimeMode;
+import com.github.gzuliyujiang.wheelpicker.entity.DatimeEntity;
+import com.github.gzuliyujiang.wheelpicker.widget.DatimeWheelLayout;
 import com.hxjt.dqyt.R;
 import com.hxjt.dqyt.app.Constants;
 import com.hxjt.dqyt.base.BaseActivity;
 import com.hxjt.dqyt.bean.DeviceInfoBean;
+import com.hxjt.dqyt.bean.GetDataType;
+import com.hxjt.dqyt.bean.HistoryDataBean;
 import com.hxjt.dqyt.bean.MenuButtonBean;
+import com.hxjt.dqyt.ui.detail.DeviceHistoryDataActivity;
+import com.hxjt.dqyt.utils.DBUtils;
 import com.hxjt.dqyt.utils.DeviceUtil;
+import com.hxjt.dqyt.utils.ExcelUtils;
 import com.hxjt.dqyt.utils.JsonUtil;
 import com.hxjt.dqyt.utils.SPUtil;
 import com.hxjt.dqyt.utils.TcpUtil;
+import com.hxjt.dqyt.utils.TimeUtils;
 import com.hxjt.dqyt.utils.ToastUtil;
 
 import org.simple.eventbus.EventBus;
 import org.simple.eventbus.Subscriber;
 
+import java.io.File;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implements SystemSetView{
+
+    private static final int PERMISSION_REQUEST_CODE = 10000;
 
     private TextView tvIpSet;
     private TextView tvPortSet;
     private TextView tvTcpTitle;
     private TextView tvTcpSwitch;
     private ImageView tcpStatusImg;
+    private TextView tv_start_time;
+    private TextView tv_end_time;
+    private TextView tv_export_excel;
 
     private String deviceType;
     private String chl;
@@ -64,6 +94,8 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
     private Handler handler;
     private boolean isOpenTcp = false;
     private boolean isCloseTcp = false;
+    private String startDt;
+    private String endDt;
 
     @Override
     protected SystemSetPresenter createPresenter() {
@@ -97,6 +129,14 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
         RadioButton rb_lc = findViewById(R.id.rb_lc);
         TextView tv_reset_pwd = findViewById(R.id.tv_reset_pwd);
         TextView tv_static_ip_btn = findViewById(R.id.tv_static_ip_btn);
+
+        tv_start_time = findViewById(R.id.tv_start_time);
+        tv_end_time = findViewById(R.id.tv_end_time);
+        tv_export_excel = findViewById(R.id.tv_export_excel);
+
+        tv_start_time.setOnClickListener(onStartClickListener);
+        tv_end_time.setOnClickListener(onEndClickListener);
+        tv_export_excel.setOnClickListener(onExportExcelListener);
 
         llBack.setOnClickListener(v -> finish());
         llIpSet.setOnClickListener(ipSetListener);
@@ -192,6 +232,59 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
     View.OnClickListener ipSetListener = v -> showInputDialog(0);
 
     View.OnClickListener portSetListener = v -> showInputDialog(1);
+
+    final View.OnClickListener onStartClickListener = v -> {
+        try {
+            showDatePickerDialog(0);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+    };
+
+    final View.OnClickListener onEndClickListener = v -> {
+        try {
+            showDatePickerDialog(1);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+    };
+
+    final View.OnClickListener onExportExcelListener = v -> {
+        if (checkPermissions()) {
+            exportExcel();
+        } else {
+            requestPermissions();
+        }
+    };
+
+    private void exportExcel(){
+        showLoading("正在导出....");
+
+        new Thread(() -> {
+            List<HistoryDataBean> listBean = DBUtils.export("djjshz",startDt,endDt,1);
+
+            List<Map<String,Object>> listMap = new ArrayList<>();
+            long timestamp = System.currentTimeMillis();
+
+            String fileName = "噪声_"+timestamp+".xlsx";
+            String[] colName = new String[]{"序号","噪声值","创建时间"};
+
+            for(int i=1; i<= listBean.size();i++){
+                Map<String,Object> map = JsonUtil.toMap(listBean.get(i-1).getDeviceData());
+                if(map != null && !map.isEmpty()){
+                    Map<String,Object> rowMap = new LinkedHashMap<>();
+                    rowMap.put("xlh",""+i);
+                    String deviceData = listBean.get(i-1).getDeviceData();
+                    rowMap.put("DeviceData",deviceData);
+                    listMap.add(rowMap);
+                }
+            }
+            File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName);
+            ExcelUtils.initExcel(file.getAbsolutePath(),fileName,colName);
+            ExcelUtils.writeObjListToExcel(listMap,file, SystemSetActivity.this);
+
+        }).start();
+    }
 
     /**
      * 开启或关闭TCP
@@ -577,7 +670,88 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
         }, 5000);
     }
 
+    /**
+     * 日期选择器
+     * @param timeType :0-开始时间 1-结束时间
+     */
+    private void showDatePickerDialog(int timeType) throws ParseException {
+        DatimePicker picker = new DatimePicker(this);
+        String time = null;
+        if(timeType == 0){
+            time = startDt;
+        } else if(timeType == 1){
+            time = endDt;
+        }
+        DatimeEntity defaultEntity = getDateTimeEntity(time);
+        DatimeEntity beginEntity = getDateTimeEntity("2024-01-01 00:00:00.000");
+        DatimeEntity endEntity = DatimeEntity.yearOnFuture(1);
+
+        picker.setBodyWidth(500);
+        DatimeWheelLayout wheelLayout = picker.getWheelLayout();
+        wheelLayout.setDateMode(DateMode.YEAR_MONTH_DAY);
+        wheelLayout.setTimeMode(TimeMode.HOUR_24_HAS_SECOND);
+        wheelLayout.setRange(beginEntity, endEntity,defaultEntity);
+        wheelLayout.setIndicatorEnabled(true);
+        wheelLayout.setIndicatorColor(getResources().getColor(R.color.button));
+        wheelLayout.setIndicatorSize(getResources().getDisplayMetrics().density * 2);
+        wheelLayout.setSelectedTextColor(getResources().getColor(R.color.button));
+        wheelLayout.setSelectedTextBold(true);
+        picker.setOnDatimePickedListener((year, month, day, hour, minute, second) -> {
+            String text = "" + year+"-" + formatWithLeadingZero(month) +"-" + formatWithLeadingZero(day) +" " +
+                    formatWithLeadingZero(hour)+":" + formatWithLeadingZero(minute)+":" + formatWithLeadingZero(second);
+            if(timeType == 0){
+                boolean isBefore = TimeUtils.isBefore(text+".000",endDt);
+                if(!isBefore){
+                    ToastUtil.s("开始时间不能晚于结束时间");
+                    return;
+                }
+                startDt = text + ".000";
+                tv_start_time.setText(text);
+            } else if(timeType == 1){
+                boolean isAfter = TimeUtils.isAfter(startDt,text+".000");
+                if(!isAfter){
+                    ToastUtil.s("结束时间不能早于开始时间");
+                    return;
+                }
+                endDt = text + ".000";
+                tv_end_time.setText(text);
+            } else {
+                throw new IllegalArgumentException("Invalid timeType: " + timeType);
+            }
+        });
+        picker.show();
+    }
+
     private void orderToFalse(){
         isOpenTcp = isCloseTcp = false;
+    }
+
+    private boolean checkPermissions() {
+        int writePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        int readPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
+        return writePermission == PackageManager.PERMISSION_GRANTED && readPermission == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requestPermissions() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) ||
+                ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            ToastUtil.s("文件的读取和写入权限是必须的，否则无法导出Excel");
+        }
+        ActivityCompat.requestPermissions(this, new String[]{
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+        }, PERMISSION_REQUEST_CODE);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED &&
+                    grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+            } else {
+                ToastUtil.s("存储权限未获得，无法导出Excel");
+            }
+        }
     }
 }

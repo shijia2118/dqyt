@@ -1,6 +1,5 @@
 package com.hxjt.dqyt.utils;
 
-import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -119,7 +118,7 @@ public class DBUtils {
         return query.find(offset, pageSize);
     }
 
-    public static List<HistoryDataBean> export(String deviceType,int dataType) {
+    public static List<HistoryDataBean> export(String deviceType,String startDt, String endDt,int dataType) {
         BoxStore mBoxStore = App.getBoxStore();
         if (mBoxStore == null) return new ArrayList<>();
 
@@ -127,6 +126,17 @@ public class DBUtils {
 
         // 创建查询并设置限制和偏移
         QueryBuilder<HistoryDataBean> queryBuilder = historyDataBeanBox.query();
+
+        // 添加时间筛选条件
+        if (startDt != null && !startDt.isEmpty() && endDt != null && !endDt.isEmpty()) {
+            queryBuilder
+                    .greater(HistoryDataBean_.CreateTime, startDt, QueryBuilder.StringOrder.CASE_SENSITIVE)
+                    .less(HistoryDataBean_.CreateTime, endDt, QueryBuilder.StringOrder.CASE_SENSITIVE);
+        } else if (startDt != null && !startDt.isEmpty()) {
+            queryBuilder.greater(HistoryDataBean_.CreateTime, startDt,QueryBuilder.StringOrder.CASE_SENSITIVE);
+        } else if (endDt != null && !endDt.isEmpty()) {
+            queryBuilder.less(HistoryDataBean_.CreateTime, endDt, QueryBuilder.StringOrder.CASE_SENSITIVE);
+        }
 
         // 添加设备类型筛选条件
         if (deviceType != null && !deviceType.isEmpty()) {
