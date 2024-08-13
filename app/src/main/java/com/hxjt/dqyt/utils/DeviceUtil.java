@@ -125,7 +125,8 @@ public class DeviceUtil {
             case "zdjccgq":return new String[]{"修改名称","删除","遥测","历史数据"};
             case "ymcsy":return new String[]{"修改名称","删除","遥测","历史数据"};
 //            case "sk645":return new String[]{"修改名称","删除","遥测","分闸","合闸","历史数据"};
-            case "sk645":return new String[]{"修改名称","删除","遥测","分闸","历史数据"};
+//            case "sk645":return new String[]{"修改名称","删除","遥测","分闸","历史数据"};
+            case "sk645":return new String[]{"修改名称","删除","遥测","历史数据"};
             case "jcq":return new String[]{"修改名称","删除","读取","工频开启","工频关闭","历史数据"};
             default:return new String[]{"修改名称","删除","遥测","历史数据"};
         }

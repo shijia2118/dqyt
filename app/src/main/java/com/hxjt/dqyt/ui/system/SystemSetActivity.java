@@ -257,6 +257,13 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
         }
     };
 
+    final View.OnClickListener onWzSwitchListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+
+        }
+    };
+
     private void exportExcel(){
         showLoading("正在导出....");
 
@@ -266,16 +273,24 @@ public class SystemSetActivity extends BaseActivity<SystemSetPresenter> implemen
             List<Map<String,Object>> listMap = new ArrayList<>();
             long timestamp = System.currentTimeMillis();
 
-            String fileName = "噪声_"+timestamp+".xlsx";
-            String[] colName = new String[]{"序号","噪声值","创建时间"};
+            String fileName = "抽油机_"+timestamp+".xlsx";
+            String[] colName = new String[]{"序号","时间","入参","计算结果1","计算结果2"};
 
             for(int i=1; i<= listBean.size();i++){
                 Map<String,Object> map = JsonUtil.toMap(listBean.get(i-1).getDeviceData());
                 if(map != null && !map.isEmpty()){
                     Map<String,Object> rowMap = new LinkedHashMap<>();
                     rowMap.put("xlh",""+i);
-                    String deviceData = listBean.get(i-1).getDeviceData();
-                    rowMap.put("DeviceData",deviceData);
+                    String reqParam = (String) map.get("ReqParam");
+                    String resParam = (String) map.get("Content");
+                    String resParam2 = (String) map.get("Content2");
+
+                    if(reqParam == null) reqParam = "";
+                    if(resParam == null) resParam = "";
+                    rowMap.put("time",listBean.get(i-1).getCreateTimeStr());
+                    rowMap.put("reqParam",reqParam);
+                    rowMap.put("resParam",resParam);
+                    rowMap.put("resParam2",resParam2);
                     listMap.add(rowMap);
                 }
             }

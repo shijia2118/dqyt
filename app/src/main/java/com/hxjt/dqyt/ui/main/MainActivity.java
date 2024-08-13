@@ -176,7 +176,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
         }
 
         /************************* mock ***********************/
-//        Map<String,Object> map = new HashMap<>();
+        Map<String,Object> map = new HashMap<>();
 //        map.put("chl",1);
 //        map.put("dev_type","bpq");
 //        map.put("addr","123");
@@ -185,13 +185,13 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
 //        DeviceInfoBean deviceInfoBean = DeviceInfoBean.fromMap(map);
 //        mDevices.add(deviceInfoBean);
 //
-//        map.put("chl",1);
-//        map.put("dev_type","sk645");
-//        map.put("addr","123");
-//        map.put("name","液面测试仪");
-//        emptyView.setVisibility(View.GONE);
-//        DeviceInfoBean deviceInfoBean2 = DeviceInfoBean.fromMap(map);
-//        mDevices.add(deviceInfoBean2);
+        map.put("chl",1);
+        map.put("dev_type","sk645");
+        map.put("addr","123");
+        map.put("name","塑壳");
+        emptyView.setVisibility(View.GONE);
+        DeviceInfoBean deviceInfoBean2 = DeviceInfoBean.fromMap(map);
+        mDevices.add(deviceInfoBean2);
 //
 //        map.put("chl",1);
 //        map.put("dev_type","jcq");
@@ -536,11 +536,18 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
         private TextView tv_zh;
         private TextView tv_dl;
         private TextView tv_gl;
+        private LinearLayout ll_shi_text;
+        private TextView tv_max_zh;
+        private TextView tv_min_zh;
+        private TextView tv_chongcheng;
+        private TextView tv_chongci;
 
         double[] S;
         double[] F;
         double[] I;
         double[] Watt;
+        String spm = "";
+        String stroke = "";
 
         public OilGraphDialog(@NonNull Context context) {
             super(context);
@@ -559,16 +566,17 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
             tv_zh = findViewById(R.id.tv_zh);
             tv_dl = findViewById(R.id.tv_dl);
             tv_gl = findViewById(R.id.tv_gl);
+            ll_shi_text = findViewById(R.id.ll_shi_text);
+            tv_max_zh = findViewById(R.id.tv_max_zh);
+            tv_min_zh = findViewById(R.id.tv_min_zh);
+            tv_chongcheng = findViewById(R.id.tv_chongcheng);
+            tv_chongci = findViewById(R.id.tv_chongci);
 
             tv_zh.setOnClickListener(this::onSwitch);
             tv_dl.setOnClickListener(this::onSwitch);
             tv_gl.setOnClickListener(this::onSwitch);
 
             mLineChart = findViewById(R.id.lc_chart);
-
-            MyMarkerView mv = new MyMarkerView(getContext(), "载荷");
-            mv.setChartView(mLineChart);
-            mLineChart.setMarker(mv);
 
             ll_close.setOnClickListener(v -> {
                 oilGraphDialog = null;
@@ -577,7 +585,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
 
             //从本地数据库取出最新1条数据
             List<HistoryDataBean> result = DBUtils.query(1,1,null,null,"djjshz",1);
-            if(!result.isEmpty()){
+            if(!result.isEmpty()) {
                 HistoryDataBean dataBean = result.get(0);
                 Map<String,Object> deviceData = JsonUtil.toMap(dataBean.getDeviceData());
                 if(deviceData != null){
@@ -601,16 +609,26 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
                             if(wattObj instanceof ArrayList){
                                 Watt = DataUtils.convertToDoubleArray((ArrayList<?>) wattObj);
                             }
-                            setData(S,F);
+
+                            Double spmD = (Double) contentMap.get("SPM");
+                            Double StrokeD = (Double) contentMap.get("Stroke");
+
+                            if(spmD != null){
+                                spm = String.valueOf(spmD);
+                            }
+                            if(StrokeD != null){
+                                stroke = String.valueOf(StrokeD);
+                            }
+                            setData(S,F,"载荷",spm,stroke);
                         }
                     }
                 }
             }
 
             //mock data
-//            double[] S = MockS;
-//            double[] F = MockF;
-//            setData(S, F);
+//            S = MockS;
+//            F = MockF;
+//            setData(S, F,"载荷","3.14","5");
         }
 
         @SuppressLint("UseCompatLoadingForDrawables")
@@ -625,7 +643,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
                 tv_gl.setTextColor(getResources().getColor(R.color.black));
                 tv_gl.setBackground(getResources().getDrawable(R.drawable.btn_border));
 
-                setData(S,F);
+                setData(S,F,"载荷",spm,stroke);
 
             } else if(v.getId() == R.id.tv_dl){
                 tv_dl.setTextColor(getResources().getColor(R.color.white));
@@ -637,7 +655,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
                 tv_gl.setTextColor(getResources().getColor(R.color.black));
                 tv_gl.setBackground(getResources().getDrawable(R.drawable.btn_border));
 
-                setData(S,I);
+                setData(S,I,"电流",null,null);
 
             } else if(v.getId() == R.id.tv_gl){
                 tv_gl.setTextColor(getResources().getColor(R.color.white));
@@ -649,11 +667,11 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
                 tv_dl.setTextColor(getResources().getColor(R.color.black));
                 tv_dl.setBackground(getResources().getDrawable(R.drawable.btn_border));
 
-                setData(S,Watt);
+                setData(S,Watt,"功率",null,null);
             }
         }
 
-        public void setData(double[] x, double[] y) {
+        public void setData(double[] x, double[] y,@NonNull String yAxisMarkerName,String stroke,String spm) {
 
             if (x == null || y == null || x.length != y.length || x.length == 0) {
                 mLineChart.setNoDataText("暂无数据");
@@ -662,23 +680,52 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
                 return;
             }
 
+            //S的最小值索引
+            int minValueIndex = DataUtils.findMinIndexFromArray(x);
             //S的最大值索引
             int maxValueIndex = DataUtils.findMaxIndexFromArray(x);
 
-            double[] x1 = new double[maxValueIndex + 1];
-            double[] x2 = new double[x.length - maxValueIndex];
+            int finalvalueIndex = minValueIndex;
+            if(maxValueIndex > minValueIndex){
+                finalvalueIndex = maxValueIndex;
+            }
 
-            double[] y1 = new double[maxValueIndex + 1];
-            double[] y2 = new double[y.length - maxValueIndex];
+            double[] x1 = new double[finalvalueIndex + 1];
+            double[] x2 = new double[x.length - finalvalueIndex];
+
+            double[] y1 = new double[finalvalueIndex + 1];
+            double[] y2 = new double[y.length - finalvalueIndex];
+
+            System.arraycopy(x,0,x1,0,finalvalueIndex+1);
+            System.arraycopy(x, finalvalueIndex, x2, 0, x.length - finalvalueIndex);
+            if(maxValueIndex > minValueIndex){
+                DataUtils.reverseArray(x2);
+            } else {
+                DataUtils.reverseArray(x1);
+            }
+
+            if(yAxisMarkerName.equals("载荷")){
+                ll_shi_text.setVisibility(VISIBLE);
+                int maxIndex = DataUtils.findMaxIndexFromArray(F);
+                int minIndex = DataUtils.findMinIndexFromArray(F);
+
+                tv_max_zh.setText(String.valueOf(F[maxIndex]));
+                tv_min_zh.setText(String.valueOf(F[minIndex]));
+                tv_chongcheng.setText(stroke);
+                tv_chongci.setText(spm);
+            } else {
+                ll_shi_text.setVisibility(GONE);
+            }
 
 
-            System.arraycopy(x,0,x1,0,maxValueIndex+1);
-            System.arraycopy(x, maxValueIndex, x2, 0, x.length - maxValueIndex);
-            DataUtils.reverseArray(x2);
 
-            System.arraycopy(y,0,y1,0,maxValueIndex+1);
-            System.arraycopy(y, maxValueIndex, y2, 0, y.length - maxValueIndex);
-            DataUtils.reverseArray(y2);
+            System.arraycopy(y,0,y1,0,finalvalueIndex+1);
+            System.arraycopy(y, finalvalueIndex, y2, 0, y.length - finalvalueIndex);
+            if(maxValueIndex > minValueIndex){
+                DataUtils.reverseArray(y2);
+            } else {
+                DataUtils.reverseArray(y1);
+            }
 
             if(x1.length != y1.length || x2.length != y2.length) return;
 
@@ -696,7 +743,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
 
             List<Entry> entries2 = new ArrayList<>();
             for (int i = 0; i < x2.length; i++) {
-                entries2.add(new Entry((float) x2[i], (float) (y2[i]))); // Example data for second line
+                entries2.add(new Entry((float) x2[i], (float) (y2[i])));
             }
 
             LineDataSet dataSet2 = new LineDataSet(entries2,"");
@@ -716,6 +763,7 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
             XAxis xAxis = mLineChart.getXAxis();
             xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
             xAxis.setTextSize(14);
+            xAxis.setAxisMaximum((float) S[maxValueIndex] +0.5f);
             xAxis.setLabelCount(10, true);
             xAxis.setDrawGridLines(true);
 
@@ -733,10 +781,12 @@ public class MainActivity extends BaseActivity<MainPresenter> implements MainVie
 
             mLineChart.getDescription().setEnabled(false);
 
+            MyMarkerView mv = new MyMarkerView(getContext(), yAxisMarkerName);
+            mv.setChartView(mLineChart);
+            mLineChart.setMarker(mv);
+
             // 刷新图表
             mLineChart.invalidate();
         }
     }
-
-
 }

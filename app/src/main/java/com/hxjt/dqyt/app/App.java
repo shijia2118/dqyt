@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -23,14 +24,20 @@ import com.easysocket.entity.OriginReadData;
 import com.easysocket.entity.SocketAddress;
 import com.easysocket.interfaces.conn.ISocketActionListener;
 import com.easysocket.interfaces.conn.SocketActionListener;
+import com.google.gson.Gson;
 import com.hxjt.dqyt.BuildConfig;
 import com.hxjt.dqyt.base.BaseApplication;
 import com.hxjt.dqyt.bean.HistoryDataBean;
 import com.hxjt.dqyt.bean.MyObjectBox;
 import com.hxjt.dqyt.utils.DBUtils;
+import com.hxjt.dqyt.utils.MessageAssembler;
 import com.hxjt.dqyt.utils.SPUtil;
 
 import org.simple.eventbus.EventBus;
+
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
 import io.objectbox.BoxStore;
 import io.objectbox.android.Admin;
@@ -39,7 +46,11 @@ public class App extends BaseApplication {
 
     private static Context context;
     private static BoxStore mBoxStore;
+    private MessageAssembler assembler = new MessageAssembler();
 
+    private static final long INTERVAL = 3 * 60 * 1000; // 3分钟的间隔，单位为毫秒
+    private Handler handler;
+    private Runnable periodicTask;
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -53,6 +64,22 @@ public class App extends BaseApplication {
         super.onCreate();
         initEasySocket();
         EasySocket.getInstance().subscribeSocketAction(iSocketActionListener);
+
+        // 定义并启动定期执行任务的Handler和Runnable
+        handler = new Handler();
+        periodicTask = new Runnable() {
+            @Override
+            public void run() {
+                // 每3分钟执行一次的任务
+                sendMessage_jdq();
+
+                // 重新安排下次执行
+                handler.postDelayed(this, INTERVAL);
+            }
+        };
+
+        // 立即启动任务
+        handler.post(periodicTask);
 
         mBoxStore = MyObjectBox.builder().androidContext(this).build();
         if (BuildConfig.DEBUG) {
@@ -84,6 +111,22 @@ public class App extends BaseApplication {
             public void onActivityDestroyed(@NonNull Activity activity) {}
         });
 
+    }
+
+    private void sendMessage_jdq(){
+        Map<String,Object> map = new HashMap<>();
+        map.put("DeviceType","bsmio");
+        map.put("DeviceCode","1");
+        map.put("CmdType","13");
+        map.put("PayloadJson","");
+        map.put("jcqdz",null);
+
+        Gson gson = new Gson();
+        String jsonString = gson.toJson(map);
+
+        byte[] jsonBytes = jsonString.getBytes(StandardCharsets.UTF_8);
+
+        EasySocket.getInstance().upMessage(jsonBytes);
     }
 
     public static BoxStore getBoxStore() {
@@ -163,9 +206,20 @@ public class App extends BaseApplication {
         @Override
         public void onSocketResponse(SocketAddress socketAddress, String readData) {
             super.onSocketResponse(socketAddress, readData);
-            EventBus.getDefault().post(readData, RECEIVED_MESSAGE);
-            DBUtils.insert(readData);
-            DBUtils.delete(readData);
+            if(readData.startsWith("[djjshz_")) {
+                assembler.processMessage(readData);
+                if (assembler.isComplete) {
+                    String result = assembler.getCompleteMessage();
+                    if (result != null) {
+                        DBUtils.insert(result);
+                        assembler.reset();
+                    }
+                }
+            } else {
+                EventBus.getDefault().post(readData, RECEIVED_MESSAGE);
+                DBUtils.insert(readData);
+                DBUtils.delete(readData);
+            }
         }
     };
 

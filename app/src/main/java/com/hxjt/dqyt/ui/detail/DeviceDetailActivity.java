@@ -15,7 +15,9 @@ import android.os.Looper;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageView;
@@ -147,25 +149,16 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
                 if(deviceCode == null) return;
 
                 if(deviceInfoBean.getDev_type().equals(JCQ) && SPUtil.hasJdq()){
-
+                    // 工频接触器的页面，返回值只有"运行状态“数据，所以统一在该方法体
                     String data = (String) map.get("srd_3");
 
                     if(!TextUtils.isEmpty(data)) {
-
-                        hideLoading();
-
-                        String msg = getMsgByOperationType();
-                        if(msg != null){
-                            ToastUtil.s(msg);
-                        }
-                        orderToFalse();
-                        if (handler != null) {
-                            handler.removeCallbacksAndMessages(null);
-                        }
-
                         Map<String,Object> result = new HashMap<>();
                         result.put("TcpCmdType","jcq");
                         result.put("DeviceCode","100");
+
+                        if(data == null) return;
+
                         if(data.equals("0")){
                             result.put("data","1");
                         } else if(data.equals("1")){
@@ -174,8 +167,28 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
                         mReceivedTcpData = result;
                         statusAdapter.update(DeviceDetailActivity.this,stateLabels,mReceivedTcpData);
                     }
+                } else  if(deviceInfoBean.getDev_type().equals(SK645) && SPUtil.hasJdq() && cmdType.equals("bsmio")){
+                    // 塑壳设备获取继电器的srd_1,用于更新闸位状态
+                    String data = (String) map.get("srd_1");
+
+                    if(!TextUtils.isEmpty(data)) {
+                        Map<String,Object> result = new HashMap<>();
+                        result.put("TcpCmdType","sk645");
+                        result.put("DeviceCode","100");
+
+                        if(data == null) return;
+
+                        if(data.equals("0")){
+                            result.put("KaiguanStatus","分闸");
+                        } else if(data.equals("1")){
+                            result.put("KaiguanStatus","合闸");
+                        }
+
+                        mReceivedTcpData = result;
+                        statusAdapter.update(DeviceDetailActivity.this,stateLabels,mReceivedTcpData);
+                    }
                 } else if(cmdType.equals(deviceType)  && deviceCode.equals(deviceInfoBean.getAddr())){
-                    // 收到的tcp数据包属于当前设备(设备类型和设备编号均一致)
+                    // 除了工频接触器之外,其他设备收到的tcp数据包属于当前设备(设备类型和设备编号均一致)
                     hideLoading();
 
                     String msg = getMsgByOperationType();
@@ -307,6 +320,9 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
             sendMessage_bpq();
         } else if(deviceInfoBean.getDev_type()!=null && deviceInfoBean.getDev_type().equals(Constants.CLZS_CGQ)){
             sendMessage_clzs();
+        } else if(deviceInfoBean.getDev_type() != null && deviceInfoBean.getDev_type().equals(JCQ) && SPUtil.hasJdq()){
+            //do nothing
+
         } else {
             sendMessage("1");
         }
@@ -337,77 +353,149 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
             operationGridView.setHorizontalSpacing(horizontalSpacing);
             operationGridView.setVerticalSpacing(verticalSpacing);
 
-            operationGridView.setOnItemClickListener((parent, view, position, id) -> {
-                String buttonText = operationButtonLabels[position];
-                if(buttonText.equals("修改名称")){
-                    updateDeviceName();
-                } else if(buttonText.equals("删除")){
-                    deleteDevice();
-                } else if(buttonText.equals("遥测")){
-                    showLoading("正在遥测...");
-                    isYc = true;
-                    sendMessage_all();
-                } else if(buttonText.equals("读取")){
-                    showLoading("正在读取...");
-                    isDq = true;
-                    sendMessage_jcq();
-                } else if(buttonText.equals("分闸")){
-                    onFhzHandler(0);
-                } else if(buttonText.equals("合闸")){
-                    onFhzHandler(1);
-                } else if(buttonText.equals("正转运行")){
-                    new XPopup.Builder(this).asConfirm("提示", "确定需要执行正转运行吗?",
-                            () -> {
-                                isZzyx = true;
-                                showLoading("准备正转运行...");
-                                sendMessage_Bpq("1");
-                            }).show();
-                } else if(buttonText.equals("反转运行")){
-                    new XPopup.Builder(this).asConfirm("提示", "确定需要执行反转运行吗?",
-                            () -> {
-                                showLoading("准备反转运行...");
-                                isFzyx = true;
-                                sendMessage_Bpq("2");
-                            }).show();
-                } else if(buttonText.equals("停机")){
-                    new XPopup.Builder(this).asConfirm("提示", "确定需要停止吗?",
-                            () -> {
-                                showLoading("准备停机...");
-                                isTj = true;
-                                sendMessage_Bpq("5");
-                            }).show();
-                } else if(buttonText.equals("频率设置")){
-                    showPlszDialog();
-                } else if(buttonText.equals("历史数据")){
-                    Intent intent = new Intent(this, DeviceHistoryDataActivity.class);
-                    intent.putExtra("device_info_bean",deviceInfoBean);
-                    startActivity(intent);
-                } else if(buttonText.equals("历史故障")){
-                    Intent intent = new Intent(this, DeviceHistoryBreakdownDataActivity.class);
-                    intent.putExtra("device_info_bean",deviceInfoBean);
-                    startActivity(intent);
-                } else if(buttonText.equals("开启")){
-                    sendMessage_jdq("2","1");
-                    ToastUtil.s("指令下发成功");
-                } else if(buttonText.equals("关闭")){
-                    sendMessage_jdq("4","0");
-                    ToastUtil.s("指令下发成功");
-                } else if(buttonText.equals("工频开启")){
-                    showLoading("正在开启...");
-                    isOpening = true;
-                    sendMessage_jdq("1","1");
-                    new Handler().postDelayed(() -> {
-                        sendMessage_jcq();
-                        after5sHandle();
-                    },1500);
-                } else if(buttonText.equals("工频关闭")){
-                    showLoading("正在关闭...");
-                    isClosing = true;
-                    sendMessage_jdq("3","0");
-                    new Handler().postDelayed(() -> {
-                        sendMessage_jcq();
-                        after5sHandle();
-                    },1500);
+            operationGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+                private long lastClickTime = 0;
+                private static final long CLICK_INTERVAL = 1000; // 最小点击间隔为1000毫秒（1秒）
+
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                    long currentTime = System.currentTimeMillis();
+                    if (currentTime - lastClickTime < CLICK_INTERVAL) {
+                        // 如果点击间隔小于指定的时间，不执行任何操作
+                        return;
+                    }
+                    lastClickTime = currentTime;
+
+                    String buttonText = operationButtonLabels[position];
+                    switch (buttonText) {
+                        case "修改名称":
+                            updateDeviceName();
+                            break;
+                        case "删除":
+                            deleteDevice();
+                            break;
+                        case "遥测":
+                            showLoading("正在遥测...");
+                            isYc = true;
+                            sendMessage_all();
+                            break;
+                        case "读取":
+                            showLoading("正在读取...");
+                            isDq = true;
+                            sendMessage_jcq();
+                            new Handler().postDelayed(() -> {
+                                hideLoading();
+                                ToastUtil.s("读取成功");
+                                if (handler != null) {
+                                    handler.removeCallbacksAndMessages(null);
+                                }
+                                orderToFalse();
+                            }, 3000);
+                            break;
+                        case "分闸":
+                            onFhzHandler(0);
+                            break;
+                        case "合闸":
+                            onFhzHandler(1);
+                            break;
+                        case "正转运行":
+                            new XPopup.Builder(DeviceDetailActivity.this).asConfirm("提示", "确定需要执行正转运行吗?",
+                                    () -> {
+                                        isZzyx = true;
+                                        showLoading("准备正转运行...");
+                                        sendMessage_Bpq("1");
+                                    }).show();
+                            break;
+                        case "反转运行":
+                            new XPopup.Builder(DeviceDetailActivity.this).asConfirm("提示", "确定需要执行反转运行吗?",
+                                    () -> {
+                                        showLoading("准备反转运行...");
+                                        isFzyx = true;
+                                        sendMessage_Bpq("2");
+                                    }).show();
+                            break;
+                        case "停机":
+                            new XPopup.Builder(DeviceDetailActivity.this).asConfirm("提示", "确定需要停止吗?",
+                                    () -> {
+                                        showLoading("准备停机...");
+                                        isTj = true;
+                                        sendMessage_Bpq("5");
+                                    }).show();
+                            break;
+                        case "频率设置":
+                            showPlszDialog();
+                            break;
+                        case "历史数据": {
+                            Intent intent = new Intent(DeviceDetailActivity.this, DeviceHistoryDataActivity.class);
+                            intent.putExtra("device_info_bean", deviceInfoBean);
+                            startActivity(intent);
+                            break;
+                        }
+                        case "历史故障": {
+                            Intent intent = new Intent(DeviceDetailActivity.this, DeviceHistoryBreakdownDataActivity.class);
+                            intent.putExtra("device_info_bean", deviceInfoBean);
+                            startActivity(intent);
+                            break;
+                        }
+                        case "开启":
+                            showLoading("");
+                            sendMessage_jdq("2", "1");
+                            new Handler().postDelayed(() -> {
+                                hideLoading();
+                                ToastUtil.s("指令下发成功");
+                                if (handler != null) {
+                                    handler.removeCallbacksAndMessages(null);
+                                }
+                                orderToFalse();
+                            }, 3000);
+                            break;
+                        case "关闭":
+                            showLoading("");
+                            sendMessage_jdq("4", "0");
+                            new Handler().postDelayed(() -> {
+                                hideLoading();
+                                ToastUtil.s("指令下发成功");
+                                if (handler != null) {
+                                    handler.removeCallbacksAndMessages(null);
+                                }
+                                orderToFalse();
+                            }, 3000);
+                            break;
+                        case "工频开启":
+                            new XPopup.Builder(DeviceDetailActivity.this).asConfirm("提示", "确定开启吗?",
+                                    () -> {
+                                        showLoading("正在开启...");
+                                        isOpening = true;
+                                        sendMessage_jdq("1", "1");
+                                        new Handler().postDelayed(() -> {
+                                            hideLoading();
+                                            ToastUtil.s("开启成功");
+                                            if (handler != null) {
+                                                handler.removeCallbacksAndMessages(null);
+                                            }
+                                            orderToFalse();
+                                        }, 3000);
+                                    }).show();
+                            break;
+                        case "工频关闭":
+                            new XPopup.Builder(DeviceDetailActivity.this).asConfirm("提示", "确定关闭吗?",
+                                    () -> {
+                                        showLoading("正在关闭...");
+                                        isClosing = true;
+                                        sendMessage_jdq("3", "0");
+                                        new Handler().postDelayed(() -> {
+                                            hideLoading();
+                                            ToastUtil.s("关闭成功");
+                                            if (handler != null) {
+                                                handler.removeCallbacksAndMessages(null);
+                                            }
+                                            orderToFalse();
+                                        }, 3000);
+                                    }).show();
+                            break;
+                    }
                 }
             });
         }
@@ -422,10 +510,10 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
 
             stateLabels = DeviceUtil.getDeviceStatusByType(deviceType);
 
-            if(deviceType.equals(SK645) && SPUtil.getString(DLQ_TYPE,"sk").equals("lc")){
-                //量测去掉"闸位状态"
-                stateLabels = DeviceUtil.removeFirstElement(stateLabels);
-            }
+//            if(deviceType.equals(SK645) && SPUtil.getString(DLQ_TYPE,"sk").equals("lc")){
+//                //量测去掉"闸位状态"
+//                stateLabels = DeviceUtil.removeFirstElement(stateLabels);
+//            }
 
             if(statusAdapter == null){
                 statusAdapter = new DeviceStatusAdapter(this, stateLabels,mReceivedTcpData);
@@ -636,7 +724,7 @@ public class DeviceDetailActivity extends BaseActivity<DeviceDetailPresenter> im
             }
             hideLoading();
             orderToFalse();
-            ToastUtil.s("操作超时");
+//            ToastUtil.s("操作超时");
         }, 5000);
     }
 

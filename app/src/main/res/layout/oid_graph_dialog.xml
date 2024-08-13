@@ -83,6 +83,80 @@
             android:paddingVertical="@dimen/dp_2"
             android:background="@drawable/btn_border"/>
 
+        <LinearLayout
+            android:id="@+id/ll_shi_text"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:paddingHorizontal="@dimen/dp_20"
+            android:gravity="end|center_vertical"
+            android:visibility="gone"
+            android:layout_weight="1">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="最大载荷:"
+                android:textSize="@dimen/sp_8"
+                android:textStyle="bold"
+                android:textColor="@color/black"/>
+
+            <TextView
+                android:id="@+id/tv_max_zh"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/sp_8"
+                android:layout_marginEnd="@dimen/dp_10"
+                android:textColor="@color/black"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="最小载荷:"
+                android:textStyle="bold"
+                android:textSize="@dimen/sp_8"
+                android:textColor="@color/black"/>
+
+            <TextView
+                android:id="@+id/tv_min_zh"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/sp_8"
+                android:layout_marginEnd="@dimen/dp_10"
+                android:textColor="@color/black"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="冲程:"
+                android:textStyle="bold"
+                android:textSize="@dimen/sp_8"
+                android:textColor="@color/black"/>
+
+            <TextView
+                android:id="@+id/tv_chongcheng"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/sp_8"
+                android:layout_marginEnd="@dimen/dp_10"
+                android:textColor="@color/black"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="冲次:"
+                android:textStyle="bold"
+                android:textSize="@dimen/sp_8"
+                android:textColor="@color/black"/>
+
+            <TextView
+                android:id="@+id/tv_chongci"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/sp_8"
+                android:textColor="@color/black"/>
+
+        </LinearLayout>
 
     </LinearLayout>
 
